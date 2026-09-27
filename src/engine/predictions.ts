@@ -181,7 +181,7 @@ export function cardText(c: CardSpec): string {
     case 'PALING_KURANG':
       return `${A} keluar sekurang-kurangnya ${c.n} kali.`;
     case 'MASIH_ADA':
-      return `Sekurang-kurangnya ${c.n} ${A} masih dalam balang di akhir pusingan.`;
+      return `Sekurang-kurangnya ${c.n} ${A} kekal dalam balang hingga akhir.`;
   }
 }
 

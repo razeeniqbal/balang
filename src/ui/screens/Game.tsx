@@ -3,7 +3,7 @@ import type { MatchClient } from '../../engine/client';
 import { food, foodImage } from '../../engine/foods';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
-import { Card, type CardState } from '../components/Card';
+import { Card, CardRow, type CardState } from '../components/Card';
 import { Logo, Modal, fmt } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Jar } from '../components/Jar';
@@ -27,6 +27,17 @@ function useReactionBubbles(view: GameView) {
     return () => timers.forEach(clearTimeout);
   }, [view.reactions]);
   return bubbles;
+}
+
+function useMedia(query: string) {
+  const [match, setMatch] = useState(() => matchMedia(query).matches);
+  useEffect(() => {
+    const mq = matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
 }
 
 /** Local countdown from the host's "ms left" snapshot (device clocks are never compared). */
@@ -90,6 +101,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const [settings] = useSettings();
   const revealMs = TIMING[settings.fast ? 'fast' : 'normal'].reveal;
   const bubbles = useReactionBubbles(view);
+  const phone = useMedia('(max-width: 640px)');
 
   // ── draw animation ─────────────────────────────────────────
   const [revealing, setRevealing] = useState<{ food: string; by: string; k: number } | null>(null);
@@ -171,14 +183,14 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const actionRef = useRef<HTMLElement>(null);
   const kacauRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!matchMedia('(max-width: 900px)').matches) return;
+    if (phone || !matchMedia('(max-width: 900px)').matches) return;
     const el = iMustDecide ? actionRef.current : myTurn && !revealing ? kacauRef.current : null;
     if (!el) return;
     // When deciding, the cards below the action panel must be visible too.
     const target = iMustDecide ? (el.parentElement ?? el) : el;
     const r = target.getBoundingClientRect();
     if (r.top < 0 || r.bottom > innerHeight) el.scrollIntoView({ behavior: 'smooth', block: iMustDecide ? 'start' : 'center' });
-  }, [iMustDecide, myTurn, revealing]);
+  }, [phone, iMustDecide, myTurn, revealing]);
 
   const drawerName = view.players.find((p) => p.id === view.drawerId)?.name;
   const nm = view.nextMilestone;
@@ -262,6 +274,196 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   }
 
   const keptCards = view.hand.filter((c) => selected.includes(c.id));
+
+  const overlays = (
+    <>
+      {revealing && (
+        <div className="reveal" aria-live="assertive" style={{ ['--reveal-ms' as string]: `${revealMs}ms` }}>
+          <div className="reveal-inner" key={revealing.k}>
+            <div className="reveal-burst" aria-hidden />
+            <img src={foodImage(revealing.food)} alt="" />
+            <div className="reveal-name">{food(revealing.food).name}!</div>
+            <div className="reveal-by">
+              Cabutan {revealing.k} · {revealing.by}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {kawOpen && finalising && (
+        <Modal label="Kunci kad dan KAW-KAW" onClose={() => setKawOpen(false)}>
+          <h2 className="banner-title">KAW-KAW?</h2>
+          <p className="banner-sub">Gandakan risiko, gandakan ganjaran. Atau main selamat.</p>
+          {decideClock && (
+            <div className="modal-timer">
+              <TimerBar c={decideClock} label="Masa anda" />
+            </div>
+          )}
+          <div className="kaw-grid">
+            {keptCards.map((c) => {
+              const m = view.config.kawkawMultiplier;
+              const on = kawChoice === c.id;
+              const known = view.handOutcomes[c.id] !== 'open';
+              return (
+                <div key={c.id} className="kaw-option">
+                  {phone ? (
+                    <CardRow card={c} kawkaw={on} multiplier={m} settled={view.handOutcomes[c.id]} state={on ? 'keep' : 'default'} disabled={known} onClick={() => setKawChoice(on ? null : c.id)} />
+                  ) : (
+                    <Card card={c} kawkaw={on} multiplier={m} settled={view.handOutcomes[c.id]} state={on ? 'keep' : 'default'} disabled={known} onClick={() => setKawChoice(on ? null : c.id)} />
+                  )}
+                  {known ? (
+                    <div className="kaw-preview off">Dah pasti, tak boleh KAW-KAW</div>
+                  ) : (
+                    <div className="kaw-preview" aria-label={`Jika KAW-KAW: ganjaran ${c.reward * m}, penalti ${c.penalty * m}`}>
+                      <div className="up">
+                        +{fmt(c.reward)} → +{fmt(c.reward * m)}
+                      </div>
+                      <div className="down">
+                        −{fmt(c.penalty)} → −{fmt(c.penalty * m)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="note center">{kawChoice ? 'Ganjaran dan penalti kad bernyala akan digandakan.' : 'Tekan satu kad untuk KAW-KAW, atau main selamat.'}</p>
+          <div className="kaw-actions">
+            <button className="btn btn-green" onClick={() => submitFinal(null)}>
+              <Icon name="shield" /> MAIN SELAMAT
+            </button>
+            <button className="btn btn-kaw" disabled={!kawChoice} onClick={() => submitFinal(kawChoice)}>
+              <Icon name="flame" /> KAW-KAW
+            </button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+
+  const tools = (
+    <>
+      <ReactionMenu
+        onSend={(text) => {
+          sfx.pop();
+          match.act({ type: 'react', text });
+        }}
+      />
+      <button className="icon-btn" onClick={onSettings} aria-label="Tetapan">
+        <Icon name="gear" />
+      </button>
+    </>
+  );
+
+  if (phone) {
+    const left = Object.values(view.remaining).reduce((a, b) => a + b, 0);
+    let listHint: string;
+    if (discarding) listHint = `Tekan ${need} kad untuk dibuang`;
+    else if (finalising) listHint = `Tekan ${need} kad untuk dikunci`;
+    else if (view.locked) listHint = 'Dikunci';
+    else if (nm) listHint = `${Math.max(toMilestone, 0)} cabutan lagi · ${nm.lock ? `kunci ${nm.keep}` : `buang ${view.hand.length - nm.keep}`}`;
+    else listHint = '';
+
+    let controls;
+    if (discarding) {
+      controls = (
+        <>
+          {decideClock && <TimerBar c={decideClock} label="Masa" />}
+          <button className="btn btn-red" disabled={selected.length !== need} onClick={confirmDiscard}>
+            <Icon name="trash" /> BUANG {selected.length}/{need} KAD
+          </button>
+        </>
+      );
+    } else if (finalising) {
+      controls = (
+        <>
+          {decideClock && <TimerBar c={decideClock} label="Masa" />}
+          <button className="btn btn-green" disabled={selected.length !== need} onClick={() => setKawOpen(true)}>
+            <Icon name="lock" /> KUNCI {selected.length}/{need} KAD
+          </button>
+        </>
+      );
+    } else if (view.phase === 'DRAW_PHASE') {
+      controls = (
+        <>
+          {countdown?.kind === 'draw' && !revealing && <TimerBar c={countdown} label={myTurn ? 'Masa anda' : 'Masa'} />}
+          <button className={`btn btn-kacau ${myTurn ? 'is-turn' : ''}`} disabled={!myTurn || !!revealing} onClick={draw}>
+            {myTurn ? 'KACAU' : `Giliran ${drawerName}…`}
+          </button>
+        </>
+      );
+    } else if (inDecision && !revealing) {
+      controls = (
+        <>
+          {decideClock && <TimerBar c={decideClock} label="Masa" />}
+          <p className="ph-note">
+            <span className="dots" aria-hidden /> Menunggu {waitingOn.map((p) => p.name).join(', ')}…
+          </p>
+        </>
+      );
+    } else {
+      controls = <p className="ph-note">{view.locked ? `Pilihan dikunci. ${view.config.draws - view.drawIndex} cabutan lagi.` : ' '}</p>;
+    }
+
+    return (
+      <main className="phone">
+        <header className="ph-top">
+          <div className="ph-logo">
+            <Logo tagline={false} />
+          </div>
+          <div className="ph-round" aria-label={`Pusingan ${view.round} daripada ${view.config.rounds}, cabutan ${view.drawIndex} daripada ${view.config.draws}, ${left} token tinggal`}>
+            <b className="display">
+              PUSINGAN {view.round}/{view.config.rounds}
+            </b>
+            <span>
+              Cabutan <b>{view.drawIndex}</b>/{view.config.draws} · {left} tinggal
+            </span>
+          </div>
+          <div className="ph-tools">{tools}</div>
+        </header>
+
+        <Players view={view} reactions={bubbles} />
+
+        <section className="ph-stage">
+          <Jar
+            roundKey={`r${view.round}`}
+            foods={view.foods}
+            startCounts={view.startCounts}
+            remaining={view.remaining}
+            shaking={shaking}
+            canDraw={myTurn && !revealing}
+            onDraw={draw}
+          />
+          <Composition view={view} />
+        </section>
+
+        <History view={view} />
+
+        <section className={`ph-hand ${discarding ? 'alert-red' : finalising ? 'alert-gold' : ''}`} aria-label="Kad ramalan anda">
+          <div className="ph-hand-head">
+            <h2 className="panel-title">KAD ANDA · {view.hand.length}</h2>
+            {listHint && <span className="ph-hint">{listHint}</span>}
+          </div>
+          <div className="ph-list">
+            {view.hand.map((c) => (
+              <CardRow
+                key={c.id}
+                card={c}
+                state={cardState(c)}
+                kawkaw={view.kawkawCardId === c.id}
+                multiplier={view.config.kawkawMultiplier}
+                settled={view.handOutcomes[c.id]}
+                onClick={discarding || finalising ? () => toggle(c.id) : undefined}
+              />
+            ))}
+          </div>
+        </section>
+
+        <footer className="ph-controls">{controls}</footer>
+        {overlays}
+      </main>
+    );
+  }
 
   return (
     <main className="game">
@@ -347,71 +549,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
         </section>
       </div>
 
-      {revealing && (
-        <div className="reveal" aria-live="assertive" style={{ ['--reveal-ms' as string]: `${revealMs}ms` }}>
-          <div className="reveal-inner" key={revealing.k}>
-            <div className="reveal-burst" aria-hidden />
-            <img src={foodImage(revealing.food)} alt="" />
-            <div className="reveal-name">{food(revealing.food).name}!</div>
-            <div className="reveal-by">
-              Cabutan {revealing.k} · {revealing.by}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {kawOpen && finalising && (
-        <Modal label="Kunci kad dan KAW-KAW" onClose={() => setKawOpen(false)}>
-          <h2 className="banner-title">KAW-KAW?</h2>
-          <p className="banner-sub">Gandakan risiko, gandakan ganjaran. Atau main selamat.</p>
-          {decideClock && (
-            <div className="modal-timer">
-              <TimerBar c={decideClock} label="Masa anda" />
-            </div>
-          )}
-          <div className="kaw-grid">
-            {keptCards.map((c) => {
-              const m = view.config.kawkawMultiplier;
-              const on = kawChoice === c.id;
-              const known = view.handOutcomes[c.id] !== 'open';
-              return (
-                <div key={c.id} className="kaw-option">
-                  <Card
-                    card={c}
-                    kawkaw={on}
-                    multiplier={m}
-                    settled={view.handOutcomes[c.id]}
-                    state={on ? 'keep' : 'default'}
-                    disabled={known}
-                    onClick={() => setKawChoice(on ? null : c.id)}
-                  />
-                  {known ? (
-                    <div className="kaw-preview off">Dah pasti, tak boleh KAW-KAW</div>
-                  ) : (
-                    <div className="kaw-preview" aria-label={`Jika KAW-KAW: ganjaran ${c.reward * m}, penalti ${c.penalty * m}`}>
-                      <div className="up">
-                        +{fmt(c.reward)} → +{fmt(c.reward * m)}
-                      </div>
-                      <div className="down">
-                        −{fmt(c.penalty)} → −{fmt(c.penalty * m)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <p className="note center">{kawChoice ? 'Ganjaran dan penalti kad bernyala akan digandakan.' : 'Tekan satu kad untuk KAW-KAW, atau main selamat.'}</p>
-          <div className="kaw-actions">
-            <button className="btn btn-green" onClick={() => submitFinal(null)}>
-              <Icon name="shield" /> MAIN SELAMAT
-            </button>
-            <button className="btn btn-kaw" disabled={!kawChoice} onClick={() => submitFinal(kawChoice)}>
-              <Icon name="flame" /> KAW-KAW
-            </button>
-          </div>
-        </Modal>
-      )}
+      {overlays}
     </main>
   );
 }

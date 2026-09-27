@@ -140,3 +140,52 @@ export function Card({ card, state = 'default', kawkaw, multiplier = 1, settled 
     </div>
   );
 }
+
+/** Wide list-style card for phones: art, condition and value on one row. */
+export function CardRow({ card, state = 'default', kawkaw, multiplier = 1, settled = 'open', onClick, disabled }: Props) {
+  const title = cardTitle(card);
+  const text = cardText(card);
+  const reward = card.reward * (kawkaw ? multiplier : 1);
+  const penalty = card.penalty * (kawkaw ? multiplier : 1);
+  const flag = FLAG[state];
+  const cls = ['card-row', `tone-${CARD_TONE[card.kind]}`, state !== 'default' && `is-${state}`, kawkaw && 'is-kawkaw', settled !== 'open' && `settled-${settled}`]
+    .filter(Boolean)
+    .join(' ');
+  const settledLabel = settled === 'true' ? 'Dah pasti betul' : settled === 'false' ? 'Dah pasti salah' : '';
+  const aria = `${title}. ${text} Ganjaran ${fmt(reward)}, penalti ${fmt(penalty)}.${kawkaw ? ' KAW-KAW aktif.' : ''}${flag ? ` ${flag.label}.` : ''}${settledLabel ? ` ${settledLabel}.` : ''}`;
+  const body = (
+    <>
+      <span className="cr-art" aria-hidden>
+        <Art card={card} />
+      </span>
+      <span className="cr-body">
+        <span className="cr-title">
+          {title}
+          {settled !== 'open' && state !== 'correct' && state !== 'wrong' && (
+            <span className={`cr-settled ${settled === 'true' ? 'yes' : 'no'}`}>{settled === 'true' ? 'DAH PASTI' : 'DAH GAGAL'}</span>
+          )}
+          {kawkaw && <span className="cr-kaw">KAW-KAW</span>}
+        </span>
+        <span className="cr-text">{text}</span>
+      </span>
+      <span className="cr-value">
+        <b>+{fmt(reward)}</b>
+        <small>−{fmt(penalty)}</small>
+      </span>
+      {flag && (
+        <span className="cr-flag" aria-hidden>
+          <Icon name={kawkaw && state === 'locked' ? 'flame' : flag.icon} size={14} />
+        </span>
+      )}
+    </>
+  );
+  return onClick ? (
+    <button className={cls} onClick={onClick} disabled={disabled} aria-pressed={state === 'keep' || state === 'discard'} aria-label={aria}>
+      {body}
+    </button>
+  ) : (
+    <div className={cls} role="group" aria-label={aria}>
+      {body}
+    </div>
+  );
+}
