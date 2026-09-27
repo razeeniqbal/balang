@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MatchClient } from '../../engine/client';
 import { food, foodImage } from '../../engine/foods';
-import type { GameView, PredictionCard } from '../../engine/types';
+import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
 import { Card, type CardState } from '../components/Card';
 import { Logo, Modal, fmt } from '../components/common';
@@ -27,6 +27,36 @@ function useReactionBubbles(view: GameView) {
     return () => timers.forEach(clearTimeout);
   }, [view.reactions]);
   return bubbles;
+}
+
+/** Local countdown from the host's "ms left" snapshot (device clocks are never compared). */
+function useCountdown(timer: TurnTimer | null) {
+  const end = useMemo(() => (timer ? Date.now() + timer.endsIn : 0), [timer]);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!timer) return;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [timer]);
+  if (!timer) return null;
+  const left = Math.max(0, end - now);
+  return { kind: timer.kind, secs: Math.ceil(left / 1000), pct: Math.min(1, left / timer.total) };
+}
+
+type Countdown = ReturnType<typeof useCountdown>;
+
+function TimerBar({ c, label }: { c: NonNullable<Countdown>; label: string }) {
+  const low = c.secs <= 5;
+  return (
+    <div className={`timer ${low ? 'low' : ''}`} role="timer" aria-label={`${label}: ${c.secs} saat lagi`}>
+      <span>{label}</span>
+      <div className="timer-bar" aria-hidden>
+        <i style={{ width: `${c.pct * 100}%` }} />
+      </div>
+      <b>{c.secs}s</b>
+    </div>
+  );
 }
 
 function ReactionMenu({ onSend }: { onSend: (t: string) => void }) {
@@ -126,6 +156,17 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     match.act({ type: 'final', keep: selected, kawkaw: kaw });
   };
 
+  const countdown = useCountdown(view.timer);
+  const myClock = countdown && ((countdown.kind === 'draw' && myTurn) || (countdown.kind === 'decide' && iMustDecide));
+  const lastTick = useRef(0);
+  useEffect(() => {
+    if (myClock && countdown && countdown.secs <= 5 && countdown.secs > 0 && countdown.secs !== lastTick.current) {
+      lastTick.current = countdown.secs;
+      sfx.select();
+    }
+  }, [myClock, countdown]);
+  const decideClock = countdown?.kind === 'decide' && !revealing ? countdown : null;
+
   const drawerName = view.players.find((p) => p.id === view.drawerId)?.name;
   const nm = view.nextMilestone;
   const toMilestone = nm ? nm.afterDraw - view.drawIndex : 0;
@@ -139,9 +180,11 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
 
   // ── contextual action ──────────────────────────────────────
   let action;
+  const clock = decideClock && <TimerBar c={decideClock} label={iMustDecide ? 'Masa anda' : 'Masa'} />;
   if (discarding) {
     action = (
       <>
+        {clock}
         <p className="action-lead">
           Pilih <b>{need}</b> kad yang anda rasa makin tak mungkin.
         </p>
@@ -153,6 +196,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   } else if (finalising) {
     action = (
       <>
+        {clock}
         <p className="action-lead">
           Pilih <b>{need}</b> kad terakhir untuk dikunci. Selepas ini anda boleh pilih KAW-KAW.
         </p>
@@ -163,9 +207,12 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     );
   } else if (inDecision && !revealing) {
     action = (
-      <p className="action-lead">
-        <span className="dots" aria-hidden /> Menunggu {waitingOn.map((p) => p.name).join(', ')}…
-      </p>
+      <>
+        {clock}
+        <p className="action-lead">
+          <span className="dots" aria-hidden /> Menunggu {waitingOn.map((p) => p.name).join(', ')}…
+        </p>
+      </>
     );
   } else if (view.locked) {
     const kc = view.hand.find((c) => c.id === view.kawkawCardId);
@@ -239,19 +286,22 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
           showHint={view.drawIndex === 0}
         />
         {view.phase === 'DRAW_PHASE' && (
-          <button className={`btn btn-kacau ${myTurn ? 'is-turn' : ''}`} disabled={!myTurn || !!revealing} onClick={draw}>
-            {myTurn ? (
-              <span className="btn-stack center">
-                KACAU
-                <small>Giliran anda — ambil token</small>
-              </span>
-            ) : (
-              <span className="btn-stack center">
-                Giliran {drawerName}
-                <small>sedang mengacau…</small>
-              </span>
-            )}
-          </button>
+          <div className="kacau-wrap">
+            <button className={`btn btn-kacau ${myTurn ? 'is-turn' : ''}`} disabled={!myTurn || !!revealing} onClick={draw}>
+              {myTurn ? (
+                <span className="btn-stack center">
+                  KACAU
+                  <small>Giliran anda untuk ambil token</small>
+                </span>
+              ) : (
+                <span className="btn-stack center">
+                  Giliran {drawerName}
+                  <small>sedang mengacau…</small>
+                </span>
+              )}
+            </button>
+            {countdown?.kind === 'draw' && !revealing && <TimerBar c={countdown} label={myTurn ? 'Masa anda' : 'Masa'} />}
+          </div>
         )}
         <History view={view} />
       </div>
@@ -301,7 +351,12 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
       {kawOpen && finalising && (
         <Modal label="Kunci kad dan KAW-KAW" onClose={() => setKawOpen(false)}>
           <h2 className="banner-title">KAW-KAW?</h2>
-          <p className="banner-sub">Gandakan risiko, gandakan ganjaran — atau main selamat.</p>
+          <p className="banner-sub">Gandakan risiko, gandakan ganjaran. Atau main selamat.</p>
+          {decideClock && (
+            <div className="modal-timer">
+              <TimerBar c={decideClock} label="Masa anda" />
+            </div>
+          )}
           <div className="kaw-grid">
             {keptCards.map((c) => {
               const m = view.config.kawkawMultiplier;
@@ -319,7 +374,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                     onClick={() => setKawChoice(on ? null : c.id)}
                   />
                   {known ? (
-                    <div className="kaw-preview off">Dah pasti — tak boleh KAW-KAW</div>
+                    <div className="kaw-preview off">Dah pasti, tak boleh KAW-KAW</div>
                   ) : (
                     <div className="kaw-preview" aria-label={`Jika KAW-KAW: ganjaran ${c.reward * m}, penalti ${c.penalty * m}`}>
                       <div className="up">
@@ -334,7 +389,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
               );
             })}
           </div>
-          <p className="note center">{kawChoice ? 'Kad bernyala akan digandakan — ganjaran dan penalti.' : 'Tekan satu kad untuk KAW-KAW, atau main selamat.'}</p>
+          <p className="note center">{kawChoice ? 'Ganjaran dan penalti kad bernyala akan digandakan.' : 'Tekan satu kad untuk KAW-KAW, atau main selamat.'}</p>
           <div className="kaw-actions">
             <button className="btn btn-green" onClick={() => submitFinal(null)}>
               <Icon name="shield" /> MAIN SELAMAT

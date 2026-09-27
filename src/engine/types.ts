@@ -3,7 +3,7 @@ export type FoodId = string;
 export interface Food {
   id: FoodId;
   name: string;
-  /** Ring colour of the token chip — also used for composition bars. */
+  /** Ring colour of the token chip, also used for composition bars. */
   color: string;
 }
 
@@ -57,6 +57,16 @@ export interface GameConfig {
   rewardTiers: { minP: number; reward: number; penalty: number }[];
   /** Cards outside this probability band at deal time are never dealt. */
   dealableP: [number, number];
+  /** Seconds per draw turn and per decision; 0 turns the timer off. */
+  drawSeconds: number;
+  decideSeconds: number;
+}
+
+export interface TurnTimer {
+  kind: 'draw' | 'decide';
+  /** Milliseconds left when this view was produced. */
+  endsIn: number;
+  total: number;
 }
 
 export interface Player {
@@ -123,5 +133,7 @@ export interface GameView {
   lastRoundEvents: ScoreEvent[];
   events: ScoreEvent[];
   reactions: Reaction[];
+  /** Filled in by the host device; null when no timer is running. */
+  timer: TurnTimer | null;
   version: number;
 }

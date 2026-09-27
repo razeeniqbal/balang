@@ -12,7 +12,7 @@ interface VisualToken {
 
 const COLS = 5;
 
-/** Slot position (percent of the token area) — rows pile up from the bottom. */
+/** Slot position (percent of the token area); rows pile up from the bottom. */
 function slot(i: number, t: VisualToken) {
   const row = Math.floor(i / COLS);
   const col = i % COLS;

@@ -1,4 +1,4 @@
-/** Tiny synthesised sound set — no audio files needed. */
+/** Tiny synthesised sound set; no audio files needed. */
 let ctx: AudioContext | null = null;
 let enabled = true;
 

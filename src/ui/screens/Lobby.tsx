@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import type { MatchClient } from '../../engine/client';
-import { MODES } from '../../engine/config';
+import { MODES, TIMERS, type TimerId } from '../../engine/config';
 import { MAX_PLAYERS, MIN_PLAYERS } from '../../engine/game';
 import type { GameView } from '../../engine/types';
 import { Avatar, Logo, Modal } from '../components/common';
@@ -20,6 +20,7 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
   const humans = view.players.filter((p) => !p.isBot).length;
   const canStart = view.players.length >= MIN_PLAYERS;
   const mode = view.config.rounds === MODES.quick.rounds ? 'quick' : 'classic';
+  const timerId = (Object.keys(TIMERS) as TimerId[]).find((k) => TIMERS[k].drawSeconds === view.config.drawSeconds) ?? 'santai';
 
   useEffect(() => {
     if (!isHost || !online) return;
@@ -34,7 +35,7 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      /* clipboard blocked — the link is visible to copy by hand */
+      /* clipboard blocked; the link is visible to copy by hand */
     }
   };
 
@@ -134,7 +135,7 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
                   key={m}
                   aria-pressed={mode === m}
                   disabled={!isHost}
-                  onClick={() => match.act({ type: 'config', config: MODES[m] })}
+                  onClick={() => match.act({ type: 'config', patch: { rounds: MODES[m].rounds } })}
                 >
                   {m === 'classic' ? 'Klasik · 3 pusingan' : 'Pantas · 1 pusingan'}
                 </button>
@@ -142,12 +143,28 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
             </div>
           </div>
 
+          <div className="field">
+            <label id="timer-label">Masa setiap giliran</label>
+            <div className="seg" role="group" aria-labelledby="timer-label">
+              {(Object.keys(TIMERS) as TimerId[]).map((t) => (
+                <button key={t} aria-pressed={timerId === t} disabled={!isHost} onClick={() => match.act({ type: 'config', patch: { ...TIMERS[t] } })}>
+                  {t === 'off' ? 'Tiada' : `${t === 'santai' ? 'Santai' : 'Laju'} · ${TIMERS[t].drawSeconds}s`}
+                </button>
+              ))}
+            </div>
+            <p className="note field-note">
+              {timerId === 'off'
+                ? 'Tiada had masa. Sesuai untuk main santai sesama kawan.'
+                : `${TIMERS[timerId].drawSeconds} saat untuk mengacau, ${TIMERS[timerId].decideSeconds} saat untuk buang atau kunci kad. Bila masa tamat, permainan pilih untuk anda.`}
+            </p>
+          </div>
+
           {isHost ? (
             <>
               <button className="btn" disabled={!canStart} onClick={() => match.act({ type: 'start' })}>
                 MULA GAME
               </button>
-              {!canStart && <p className="note center">Perlu sekurang-kurangnya {MIN_PLAYERS} pemain — jemput kawan atau tambah lawan komputer.</p>}
+              {!canStart && <p className="note center">Perlu sekurang-kurangnya {MIN_PLAYERS} pemain. Jemput kawan atau tambah lawan komputer.</p>}
               {canStart && humans === 1 && <p className="note center">Anda bermain dengan lawan komputer sahaja. Kawan masih boleh sertai sebelum mula.</p>}
             </>
           ) : (

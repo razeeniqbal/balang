@@ -29,9 +29,19 @@ export const CLASSIC: GameConfig = {
   kawkawMultiplier: 2,
   rewardTiers,
   dealableP: [0.07, 0.9],
+  drawSeconds: 20,
+  decideSeconds: 45,
 };
 
 export const QUICK: GameConfig = { ...CLASSIC, rounds: 1 };
 
 export const MODES = { classic: CLASSIC, quick: QUICK } as const;
 export type ModeId = keyof typeof MODES;
+
+/** Turn-timer presets offered in the lobby: [draw seconds, decision seconds]. */
+export const TIMERS = {
+  off: { drawSeconds: 0, decideSeconds: 0 },
+  santai: { drawSeconds: 20, decideSeconds: 45 },
+  laju: { drawSeconds: 10, decideSeconds: 25 },
+} as const;
+export type TimerId = keyof typeof TIMERS;

@@ -4,7 +4,7 @@ import type { FoodId } from '../../engine/types';
 
 export function Logo({ tagline = true }: { tagline?: boolean }) {
   return (
-    <div className="logo" role="img" aria-label="BALANG — Agak. Risiko. Menang.">
+    <div className="logo" role="img" aria-label="BALANG. Agak. Risiko. Menang.">
       <img className="logo-lid" src="/assets/jar/lid.png" alt="" />
       <span className="logo-word">BALANG</span>
       {tagline && <span className="logo-tag">Agak. Risiko. Menang.</span>}

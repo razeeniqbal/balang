@@ -143,7 +143,7 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
         await navigator.share({ files: [file], title: 'BALANG', text: `Saya dapat tempat #${myPos} dalam BALANG! Agak. Risiko. Menang.` });
         return;
       } catch {
-        /* user cancelled — fall through to download */
+        /* user cancelled, so fall through to download */
       }
     }
     const a = document.createElement('a');
@@ -223,12 +223,12 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
             </div>
             <div className="stat">
               <span>Ramalan terbaik</span>
-              <b>{stats.best ? signed(stats.best.delta) : '—'}</b>
+              <b>{stats.best ? signed(stats.best.delta) : 'Tiada'}</b>
               <small>{stats.best ? `${cardTitle(stats.best.card)} · ${food(stats.best.card.a).name}` : 'Tiada yang betul'}</small>
             </div>
             <div className="stat">
               <span>Terlepas paling teruk</span>
-              <b>{stats.worst ? signed(stats.worst.delta) : '—'}</b>
+              <b>{stats.worst ? signed(stats.worst.delta) : 'Tiada'}</b>
               <small>{stats.worst ? `${cardTitle(stats.worst.card)} · ${food(stats.worst.card.a).name}` : 'Tiada yang salah!'}</small>
             </div>
             <div className="stat">

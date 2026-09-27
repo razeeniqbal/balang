@@ -26,7 +26,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.roundRect(x, y, w, h, r);
 }
 
-/** Share card rendered from structured match data — never a UI screenshot. */
+/** Share card rendered from structured match data, never a UI screenshot. */
 export async function renderShareCard(d: ShareData): Promise<Blob> {
   await document.fonts?.ready;
   const W = 1080;
@@ -101,7 +101,7 @@ export async function renderShareCard(d: ShareData): Promise<Blob> {
   const s = d.stats;
   const tiles: [string, string][] = [
     ['KETEPATAN', `${Math.round(s.accuracy * 100)}%`],
-    ['TERBAIK', s.best ? signed(s.best.delta) : '—'],
+    ['TERBAIK', s.best ? signed(s.best.delta) : '-'],
     ['KAW-KAW', `${s.kawkawWon}/${s.kawkawTried}`],
     ['RENTETAN', String(s.longestStreak)],
   ];

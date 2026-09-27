@@ -32,7 +32,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(KEY, JSON.stringify(s));
     } catch {
-      /* storage unavailable — settings just won't persist */
+      /* storage unavailable, so settings just won't persist */
     }
   }, [s]);
   return <Ctx.Provider value={[s, (patch) => setS((prev) => ({ ...prev, ...patch }))]}>{children}</Ctx.Provider>;

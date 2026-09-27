@@ -357,6 +357,7 @@ export class GameHost {
       lastRoundEvents: this.events.filter((e) => e.round === this.round && this.phase !== 'LOBBY'),
       events: this.phase === 'ROUND_RESOLUTION' || this.phase === 'FINAL_RESULTS' ? [...this.events] : this.events.filter((e) => e.round < this.round),
       reactions: [...this.reactions],
+      timer: null,
       version: this.version,
     };
   }

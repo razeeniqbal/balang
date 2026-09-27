@@ -3,7 +3,7 @@ import { BOT_NAMES, botDiscard, botFinal, randomPersonality, type BotPersonality
 import { applyAction, peerIdFor, type Action, type Connection, type MatchClient } from '../engine/client';
 import { GameHost } from '../engine/game';
 import { mulberry32, pick, shuffle } from '../engine/rng';
-import type { GameView } from '../engine/types';
+import type { GameView, TurnTimer } from '../engine/types';
 import type { GuestMessage, HostMessage } from './protocol';
 
 /** Reveal time must match the draw animation in the UI. */
@@ -17,6 +17,11 @@ const BOT_LINES = {
   win: ['Wahh!', 'Nice!', 'KAW-KAW!'],
   lose: ['Alamak...', 'Adoi!', 'Hmm...'],
 };
+
+/** Stand-in used when a human's turn timer runs out: sensible picks, never KAW-KAW. */
+const TIMEOUT_PLAYER: BotPersonality = { noise: 0, kawkawAt: 2 };
+
+const phaseKey = (v: { round: number; drawIndex: number; phase: string }) => `${v.round}:${v.drawIndex}:${v.phase}`;
 
 export const AVATARS = Array.from({ length: 12 }, (_, i) => `avatar-${String(i + 1).padStart(2, '0')}`);
 
@@ -44,6 +49,7 @@ export class HostMatch implements MatchClient {
   private peer: Peer | null = null;
   private conns = new Map<string, DataConnection>(); // playerId → connection
   private disposed = false;
+  private deadline: { key: string; at: number; total: number; kind: TurnTimer['kind'] } | null = null;
 
   constructor(me: string, name: string, avatar: string, online: boolean) {
     this.me = me;
@@ -54,6 +60,7 @@ export class HostMatch implements MatchClient {
     this.host.addPlayer({ id: me, name, avatar, isBot: false });
     this.host.subscribe(() => {
       this.cached = null;
+      this.updateDeadline();
       this.broadcast();
       this.tick();
       this.emit();
@@ -69,7 +76,14 @@ export class HostMatch implements MatchClient {
   private emit() {
     this.listeners.forEach((fn) => fn());
   }
-  getView = (): GameView => (this.cached ??= this.host.view(this.me));
+  getView = (): GameView => (this.cached ??= this.viewFor(this.me));
+
+  private viewFor(pid: string): GameView {
+    const v = this.host.view(pid);
+    const d = this.deadline;
+    v.timer = d && d.key === phaseKey(v) ? { kind: d.kind, total: d.total, endsIn: Math.max(0, d.at - Date.now()) } : null;
+    return v;
+  }
 
   act(a: Action) {
     this.handle(this.me, a);
@@ -107,9 +121,15 @@ export class HostMatch implements MatchClient {
       case 'remove':
         if (isHost) this.removePlayer(a.id);
         return;
-      case 'config':
-        if (isHost) h.setConfig(a.config);
+      case 'config': {
+        if (!isHost) return;
+        const { rounds, drawSeconds, decideSeconds } = a.patch;
+        const patch = Object.fromEntries(
+          Object.entries({ rounds, drawSeconds, decideSeconds }).filter(([, x]) => typeof x === 'number' && x >= 0 && x <= 600),
+        );
+        h.setConfig({ ...h.config, ...patch });
         return;
+      }
       default:
         applyAction(h, pid, a);
     }
@@ -211,7 +231,7 @@ export class HostMatch implements MatchClient {
       }
       this.conns.set(id, conn);
     }
-    this.send(conn, { t: 'view', view: h.view(id) });
+    this.send(conn, { t: 'view', view: this.viewFor(id) });
     return id;
   }
 
@@ -232,7 +252,61 @@ export class HostMatch implements MatchClient {
   }
 
   private broadcast() {
-    for (const [pid, conn] of this.conns) this.send(conn, { t: 'view', view: this.host.view(pid) });
+    for (const [pid, conn] of this.conns) this.send(conn, { t: 'view', view: this.viewFor(pid) });
+  }
+
+  // ── turn timer ───────────────────────────────────────────────
+  private isHuman(pid: string) {
+    return !this.bots.has(pid) && !this.host.players.find((p) => p.id === pid)?.isBot;
+  }
+
+  /** Start a countdown when a human has to act; the reveal animation is added as grace time. */
+  private updateDeadline() {
+    const h = this.host;
+    const v = h.view(this.me);
+    const key = phaseKey(v);
+    if (this.deadline?.key === key) return;
+    const cfg = h.config;
+    let kind: TurnTimer['kind'] | null = null;
+    let secs = 0;
+    if (v.phase === 'DRAW_PHASE' && v.drawerId && this.isHuman(v.drawerId) && !(v.drawerId === this.me && this.autoDraw)) {
+      kind = 'draw';
+      secs = cfg.drawSeconds;
+    } else if ((v.phase === 'DECISION_PHASE' || v.phase === 'FINAL_PREDICTION') && h.players.some((p) => this.isHuman(p.id))) {
+      kind = 'decide';
+      secs = cfg.decideSeconds;
+    }
+    if (!kind || secs <= 0) {
+      this.deadline = null;
+      return;
+    }
+    const at = Date.now() + this.timing().reveal + secs * 1000;
+    this.deadline = { key, at, total: secs * 1000, kind };
+    this.later(`timeout:${key}`, at - Date.now(), () => this.expire(key));
+  }
+
+  private expire(key: string) {
+    const h = this.host;
+    const v = h.view(this.me);
+    if (phaseKey(v) !== key) return;
+    if (v.phase === 'DRAW_PHASE' && v.drawerId && this.isHuman(v.drawerId)) {
+      const pid = v.drawerId;
+      this.lastDrawAt = Date.now();
+      h.react(pid, 'Masa tamat!');
+      h.draw(pid);
+      return;
+    }
+    for (const p of h.players) {
+      if (!this.isHuman(p.id)) continue;
+      const pv = h.view(p.id);
+      if (pv.status[p.id] !== 'thinking') continue;
+      h.react(p.id, 'Masa tamat!');
+      if (pv.phase === 'DECISION_PHASE') h.discard(p.id, botDiscard(this.rng, pv, TIMEOUT_PLAYER));
+      else {
+        const { keep } = botFinal(this.rng, pv, TIMEOUT_PLAYER);
+        h.submitFinal(p.id, keep, null);
+      }
+    }
   }
 
   // ── bots ─────────────────────────────────────────────────────

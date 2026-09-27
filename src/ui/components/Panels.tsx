@@ -109,13 +109,13 @@ export function Composition({ view }: { view: GameView }) {
             >
               <img src={chipImage(f)} alt="" />
               <div className="bar-wrap">
-                <div className="cname">
-                  {fd.name}
-                  <small>keluar {out}</small>
-                </div>
+                <div className="cname">{fd.name}</div>
                 <div className="bar">
                   <i style={{ width: `${(r / s) * 100}%`, background: fd.color }} />
                 </div>
+                <small className="out">
+                  {out} keluar daripada {s}
+                </small>
               </div>
               <span className="count">{r}</span>
             </li>

@@ -12,13 +12,13 @@ export type Action =
   | { type: 'next' }
   | { type: 'again' }
   | { type: 'lobby' }
-  | { type: 'config'; config: GameConfig }
+  | { type: 'config'; patch: Partial<Pick<GameConfig, 'rounds' | 'drawSeconds' | 'decideSeconds'>> }
   | { type: 'addBot' }
   | { type: 'remove'; id: string };
 
 export type Connection = 'local' | 'connecting' | 'online' | 'lost' | 'error';
 
-/** What the UI talks to — the same for the host device and for guests. */
+/** What the UI talks to: the same for the host device and for guests. */
 export interface MatchClient {
   readonly me: string;
   readonly isHostDevice: boolean;

@@ -3,7 +3,7 @@ import type { Rng } from './rng';
 import type { GameView } from './types';
 
 export interface BotPersonality {
-  /** Added to every card's judged value — makes bots imperfect. */
+  /** Added to every card's judged value so bots are imperfect. */
   noise: number;
   /** Probability a card must reach before the bot will KAW-KAW it. */
   kawkawAt: number;
@@ -14,7 +14,7 @@ export const randomPersonality = (rng: Rng): BotPersonality => ({
   kawkawAt: 0.62 + rng() * 0.3,
 });
 
-/** Bots reason from the public view only — the same information a human has. */
+/** Bots reason from the public view only: the same information a human has. */
 function judge(rng: Rng, view: GameView, me: BotPersonality) {
   const ps = estimate(rng, view.hand, view.drawn, view.remaining, view.startCounts, view.config.draws, 600);
   return view.hand

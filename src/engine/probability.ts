@@ -21,7 +21,7 @@ export function estimate(
   const hits = new Array(cards.length).fill(0);
   const seq = [...drawn];
   for (let s = 0; s < sims; s++) {
-    // Partial Fisher–Yates: only the next `left` tokens matter.
+    // Partial Fisher-Yates: only the next `left` tokens matter.
     for (let i = 0; i < left; i++) {
       const j = i + Math.floor(rng() * (pool.length - i));
       [pool[i], pool[j]] = [pool[j], pool[i]];

@@ -1,4 +1,4 @@
-# BALANG — Agak. Risiko. Menang.
+# BALANG: Agak. Risiko. Menang.
 
 Malaysian probability & prediction party game, built from `BALANG_PRD_v1.1.md`.
 React 19 + Vite + TypeScript, no backend.
@@ -28,7 +28,7 @@ npm run build    # production build → dist/
 | `src/engine/` | Pure game logic: `game.ts` (authority / state machine), `predictions.ts` (12 card types, evaluation, "already decided" logic), `probability.ts` (Monte Carlo pricing), `bots.ts`, `stats.ts`, `config.ts` (all balancing values) |
 | `src/net/` | `host.ts` (host device: GameHost + bots + serving guests), `guest.ts`, `protocol.ts` |
 | `src/ui/` | Screens, components, styles, synthesised sound, share-card renderer |
-| `public/assets/` | Sprites sliced from the concept sheets — regenerate with `npm run assets` |
+| `public/assets/` | Sprites sliced from the concept sheets. Regenerate with `npm run assets` |
 | `tools/slice_assets.py` | The slicer (Python + Pillow + SciPy) |
 
 ## Balancing

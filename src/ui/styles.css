@@ -3163,3 +3163,253 @@ button.lobby-row.empty:hover {
     text-align: right;
   }
 }
+
+/* ── v3 polish ─────────────────────────────────────────────── */
+h1,
+h2,
+h3,
+.banner-title,
+.card-text,
+.pill {
+  text-wrap: balance;
+}
+
+p,
+.note,
+.action-lead {
+  text-wrap: pretty;
+}
+
+.tut-text p {
+  text-align: justify;
+  text-align-last: left;
+}
+
+/* avatar picker: fixed tracks so the last column never spills past the panel */
+.home-panel {
+  padding: 22px;
+}
+
+.avatar-pick {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.avatar-pick button {
+  min-width: 0;
+  padding: 2px;
+  border-width: 2px;
+  display: block;
+}
+
+.avatar-pick img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.profile-avatar {
+  border-radius: 50%;
+}
+
+/* card rows: no browser scrollbar; wrap on wide screens */
+.cards {
+  scrollbar-width: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: visible;
+}
+
+.cards::-webkit-scrollbar {
+  display: none;
+}
+
+.hand-panel .cards {
+  justify-content: flex-start;
+}
+
+/* balang: give the KACAU button room below the mat */
+.g-center {
+  gap: 14px;
+}
+
+.jar-wrap {
+  margin-bottom: 18px;
+}
+
+.btn-kacau {
+  position: relative;
+  z-index: 3;
+}
+
+/* composition rows */
+.comp-row .cname {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comp-row .out {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* turn timer */
+.timer {
+  --pct: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--cream-100);
+}
+
+.timer-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.timer-bar i {
+  display: block;
+  height: 100%;
+  width: var(--pct);
+  border-radius: 999px;
+  background: var(--gold-400);
+  transition: width 0.25s linear;
+}
+
+.timer.low .timer-bar i {
+  background: var(--red-400);
+}
+
+.timer.low b {
+  color: #ff9b8f;
+}
+
+.timer b {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.kacau-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, 100%);
+}
+
+.kacau-wrap .btn-kacau {
+  width: 100%;
+  min-width: 0;
+}
+
+.pstatus b {
+  color: var(--gold-300);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .avatar-pick {
+    gap: 6px;
+  }
+
+  /* phones: one swipeable row with a soft fade instead of a scrollbar */
+  .cards {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+    padding-right: 28px;
+  }
+
+  .kacau-wrap {
+    width: 100%;
+  }
+
+  .jar-wrap {
+    margin-bottom: 12px;
+  }
+
+  .comp-row .out {
+    display: none;
+  }
+}
+
+.modal-timer {
+  max-width: 420px;
+  margin: 14px auto 0;
+}
+
+.field-note {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+/* desktop fit: jar shrinks with window height so history never hides under the hand */
+.jar-wrap {
+  width: clamp(170px, calc((100dvh - 660px) / 1.25), 330px);
+}
+
+.comp-head .pill {
+  flex: none;
+}
+
+.card-value {
+  padding-top: 6px;
+}
+
+/* round reveal: all six cards on one row */
+.reveal-card {
+  width: min(1040px, 100%);
+  gap: 14px;
+  padding: 20px 24px;
+}
+
+.reveal-card .isi-item {
+  padding: 8px 6px;
+}
+
+.reveal-card .isi-item img {
+  width: 60px;
+  height: 60px;
+}
+
+.reveal-card .cards {
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.reveal-card .card {
+  width: 148px;
+  min-height: 204px;
+}
+
+@media (max-width: 900px) {
+  .jar-wrap {
+    width: min(270px, 62vw);
+  }
+
+  .reveal-card .card {
+    width: 136px;
+  }
+}
+
+.action-panel .btn {
+  font-size: 18px;
+  white-space: nowrap;
+  padding-inline: 14px;
+}

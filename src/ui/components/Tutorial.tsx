@@ -86,7 +86,8 @@ const SLIDES = [
       text={
         <>
           <p>Pemain bergilir menekan <b>KACAU</b>. <b>15 token</b> akan keluar dan 10 kekal dalam balang.</p>
-          <p>Panel <b>Balang Sekarang</b> menunjukkan apa yang masih tinggal — gunakan itu untuk menilai kad anda.</p>
+          <p>Panel <b>Balang Sekarang</b> menunjukkan apa yang masih tinggal. Gunakan itu untuk menilai kad anda.</p>
+          <p>Jika hos pasang <b>had masa</b> dan masa anda tamat, token dicabut atau kad dipilih secara automatik.</p>
         </>
       }
     >
@@ -182,7 +183,7 @@ const SLIDES = [
       text={
         <>
           <p>Selepas cabutan ke-15, kad anda diperiksa: <b className="up">BETUL</b> dapat ganjaran, <b className="down">SALAH</b> kena penalti.</p>
-          <p>Main <b>3 pusingan</b> — mata tertinggi jadi JUARA!</p>
+          <p>Main <b>3 pusingan</b>. Mata tertinggi jadi JUARA!</p>
         </>
       }
     >
