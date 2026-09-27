@@ -63,6 +63,54 @@ def circle(img):
     return Image.fromarray(arr.astype(np.uint8))
 
 
+def fit_circle(xs, ys):
+    """Least-squares (Kasa) circle fit."""
+    A = np.c_[2 * xs, 2 * ys, np.ones(len(xs))]
+    b = xs**2 + ys**2
+    cx, cy, c = np.linalg.lstsq(A, b, rcond=None)[0]
+    return cx, cy, np.sqrt(c + cx**2 + cy**2)
+
+
+def avatars(sheet, rows, cols, size):
+    """Crop each avatar badge on its own ring.
+
+    Hair and caps poke above the ring in the art, and the sheet's grid cuts
+    through some of them, so the ring is fitted from its lower edge only and
+    the badge is cut from the full sheet as a perfect circle at the ring.
+    """
+    im = Image.open(SRC / sheet).convert("RGBA")
+    arr = np.array(im)
+    solid = arr[:, :, 3] > 200
+    cw, ch = im.width / cols, im.height / rows
+    (OUT / "avatars").mkdir(parents=True, exist_ok=True)
+    for i in range(rows * cols):
+        r, c = divmod(i, cols)
+        x0, y0 = round(c * cw), round(r * ch)
+        cell = solid[y0 : round((r + 1) * ch), x0 : round((c + 1) * cw)]
+        labels, n = ndimage.label(cell)
+        sizes = ndimage.sum(cell, labels, range(1, n + 1))
+        blob = ndimage.binary_fill_holes(labels == int(np.argmax(sizes)) + 1)
+        edge = blob & ~ndimage.binary_erosion(blob)
+        ys, xs = np.nonzero(edge)
+        cy0 = ys.mean()
+        for _ in range(3):  # refit on the half below the centre, where nothing overlaps the ring
+            sel = ys > cy0
+            cx, cy, rad = fit_circle(xs[sel].astype(float), ys[sel].astype(float))
+            cy0 = cy
+        cx += x0
+        cy += y0
+        rad -= 1
+        box = (int(cx - rad), int(cy - rad), int(cx + rad) + 1, int(cy + rad) + 1)
+        crop = np.array(im.crop(box)).astype(float)
+        h, w = crop.shape[:2]
+        yy, xx = np.mgrid[0:h, 0:w]
+        d = np.hypot(xx + box[0] - cx, yy + box[1] - cy)
+        crop[:, :, 3] *= np.clip(rad - d + 0.5, 0, 1)
+        badge = Image.fromarray(crop.astype(np.uint8))
+        square(badge, size).save(OUT / "avatars" / f"avatar-{i + 1:02d}.png", optimize=True)
+    print(sheet, "->", rows * cols, "(ring-fitted)")
+
+
 def square(img, size):
     s = max(img.size)
     canvas = Image.new("RGBA", (s, s))
@@ -86,7 +134,7 @@ def grid(sheet, rows, cols, names, folder, size, crop=tight, post=None):
 
 grid("Balang Core Malaysian Food Tokens.png", 2, 5, FOODS, "food", 256, crop=main_parts)
 grid("Balang Gameplay Token Set.png", 2, 5, FOODS, "chips", 160, crop=main_parts)
-grid("Balang Player Avatars.png", 3, 4, [f"avatar-{i+1:02d}" for i in range(12)], "avatars", 192, crop=largest, post=circle)
+avatars("Balang Player Avatars.png", 3, 4, 192)
 
 # Jar sheet: 6 jars side by side; the first is the empty canonical jar.
 im = Image.open(SRC / "Balang The BALANG.png").convert("RGBA")

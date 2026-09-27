@@ -8,6 +8,12 @@ import { Tutorial } from '../components/Tutorial';
 
 const KEY = 'balang.profile';
 
+/** Picker order: two rows of six, matching ring colours stacked in each column. */
+const PICKER_ROWS = [
+  ['avatar-01', 'avatar-02', 'avatar-03', 'avatar-04', 'avatar-05', 'avatar-06'], // green yellow red pink teal orange
+  ['avatar-07', 'avatar-09', 'avatar-11', 'avatar-10', 'avatar-08', 'avatar-12'], // green yellow red pink blue purple
+].flat();
+
 function loadProfile(): { name: string; avatar: string } {
   try {
     const p = JSON.parse(localStorage.getItem(KEY) ?? '');
@@ -69,7 +75,7 @@ export function Home({ onStart, inviteCode }: { onStart: (o: StartOptions) => vo
             </div>
           </div>
           <div className="avatar-pick" role="radiogroup" aria-label="Pilih avatar">
-            {AVATARS.map((a, i) => (
+            {PICKER_ROWS.map((a, i) => (
               <button type="button" key={a} role="radio" aria-checked={avatar === a} aria-label={`Avatar ${i + 1}`} onClick={() => setAvatar(a)}>
                 <img src={avatarSrc(a)} alt="" />
               </button>
