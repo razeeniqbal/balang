@@ -1447,3 +1447,95 @@ button.card-row:active:not(:disabled) {
     gap: 4px;
   }
 }
+
+/* ── stage fix: jar capped and centred, mat kept inside, counts on top ── */
+.ph-stage {
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ph-jar {
+  flex: 1 1 0;
+  max-height: 220px;
+  align-items: flex-end;
+  padding: 2px 0 6px;
+}
+
+.ph-jar .jar-wrap {
+  height: 100%;
+  max-height: 100%;
+}
+
+.ph-jar .jar-mat {
+  left: -10%;
+  right: -10%;
+  bottom: -3%;
+  height: 13%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ph-counts {
+  position: relative;
+  z-index: 2;
+}
+
+.ph-counts li {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* ── balance: no stage box; spare height becomes breathing room ── */
+.phone {
+  justify-content: space-between;
+}
+
+.ph-stage {
+  flex: 0 1 auto;
+  background: none;
+  padding: 0;
+  gap: 8px;
+}
+
+.ph-jar {
+  flex: none;
+  height: clamp(130px, calc(100dvh - 500px), 230px);
+  max-height: none;
+}
+
+.mc-text {
+  display: none;
+}
+
+/* tall phones: show the condition on the card itself */
+@media (max-width: 640px) and (min-height: 740px) {
+  .ph-jar {
+    height: clamp(150px, calc(100dvh - 560px), 240px);
+  }
+
+  .mini-card {
+    flex-basis: 128px;
+    height: 196px;
+  }
+
+  .mc-art {
+    flex: none;
+    height: 52px;
+  }
+
+  .mc-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+    margin: 2px 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.22;
+    text-align: center;
+    color: #2b3a31;
+  }
+
+  .mc-settled {
+    top: 26px;
+  }
+}

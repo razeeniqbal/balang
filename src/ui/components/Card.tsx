@@ -210,6 +210,7 @@ export function MiniCard({ card, state = 'default', kawkaw, multiplier = 1, sett
       <span className="mc-art" aria-hidden>
         <Art card={card} />
       </span>
+      <span className="mc-text">{cardText(card)}</span>
       {settled !== 'open' && <span className={`mc-settled ${settled === 'true' ? 'yes' : 'no'}`}>{settled === 'true' ? 'DAH PASTI' : 'DAH GAGAL'}</span>}
       <span className="mc-value">
         <b>+{fmt(reward)}</b>

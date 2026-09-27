@@ -3735,3 +3735,55 @@ p,
 .home-links a.btn {
   text-decoration: none;
 }
+
+/* final standings: podium rises after the drumroll */
+.podium .podium-step {
+  transform: translateY(30px) scale(0.9);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1),
+    opacity 0.3s;
+}
+
+.podium.revealed .podium-step {
+  transform: none;
+  opacity: 1;
+}
+
+.podium.revealed .podium-step.p3 {
+  transition-delay: 0s;
+}
+
+.podium.revealed .podium-step.p2 {
+  transition-delay: 0.12s;
+}
+
+.podium.revealed .podium-step.p1 {
+  transition-delay: 0.24s;
+}
+
+.final-verdict {
+  width: fit-content;
+  margin: -6px auto 0;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 15px;
+  text-align: center;
+  animation: pop 0.45s ease;
+}
+
+.final-verdict.won {
+  background: var(--gold-400);
+  color: var(--green-900);
+}
+
+.final-verdict.lost {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--cream-100);
+}
+
+.juara-crown {
+  color: var(--gold-400);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
+}

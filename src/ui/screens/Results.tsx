@@ -122,14 +122,25 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
   const ranked = ranking(view.players, view.scores);
   const me = view.players.find((p) => p.id === view.me)!;
   const myPos = ranked.findIndex((p) => p.id === view.me) + 1;
+  // Ties for first place all count as winners.
+  const top = view.scores[ranked[0].id];
+  const iWon = view.scores[view.me] === top;
+  const [revealed, setRevealed] = useState(false);
   const stats = useMemo(() => statsFor(view.events, view.me), [view.events, view.me]);
   const [share, setShare] = useState<{ url: string; blob: Blob } | null>(null);
   const [sharing, setSharing] = useState(false);
 
+  // Drumroll, then the podium rises with a win or lose sound on each player's own device.
   useEffect(() => {
-    const t = setTimeout(() => (myPos === 1 ? sfx.win() : sfx.correct()), 300);
-    return () => clearTimeout(t);
-  }, [myPos]);
+    const roll = 1.4;
+    const t1 = setTimeout(() => sfx.drumroll(roll), 250);
+    const t2 = setTimeout(() => {
+      setRevealed(true);
+      if (iWon) sfx.win();
+      else sfx.lose();
+    }, 250 + roll * 1000);
+    return () => [t1, t2].forEach(clearTimeout);
+  }, [iWon]);
 
   useEffect(() => () => {
     if (share) URL.revokeObjectURL(share.url);
@@ -167,14 +178,19 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
 
   return (
     <main className="results">
-      {myPos === 1 && <Confetti />}
+      {revealed && iWon && <Confetti />}
       <div style={{ ['--logo-size' as string]: '48px' }}>
         <Logo />
       </div>
       <div className="panel results-card">
-        <h1 className="banner-title">{myPos === 1 ? 'JUARA!' : 'KEPUTUSAN AKHIR'}</h1>
+        <h1 className="banner-title">{!revealed ? 'DAN PEMENANGNYA…' : iWon ? 'JUARA!' : 'KEPUTUSAN AKHIR'}</h1>
+        {revealed && (
+          <p className={`final-verdict ${iWon ? 'won' : 'lost'}`} role="status">
+            {iWon ? 'Tahniah, anda menang!' : `Anda di tempat ke-${myPos}. Alamak, cuba lagi!`}
+          </p>
+        )}
 
-        <div className="podium" aria-label="Tiga teratas">
+        <div className={`podium ${revealed ? 'revealed' : ''}`} aria-label="Tiga teratas">
           {podium.map((p) => {
             const pos = ranked.indexOf(p) + 1;
             return (

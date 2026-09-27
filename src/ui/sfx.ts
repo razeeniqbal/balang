@@ -55,6 +55,22 @@ export const sfx = {
   },
   correct: () => [523, 659, 784].forEach((f, i) => tone(f, 0.18, 'triangle', 0.1, i * 0.09)),
   wrong: () => tone(220, 0.35, 'sawtooth', 0.07, 0, 110),
-  win: () => [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.2, 'triangle', 0.1, i * 0.12)),
+  /** Snare-style roll that builds for `secs`, played before the final standings appear. */
+  drumroll: (secs = 1.4) => {
+    const n = Math.round(secs / 0.045);
+    for (let i = 0; i < n; i++) tone(180 + Math.random() * 60, 0.04, 'square', 0.02 + (0.05 * i) / n, i * 0.045);
+    tone(90, 0.3, 'sine', 0.16, secs);
+  },
+  /** Winner's fanfare: rising arpeggio, then a held major chord. */
+  win: () => {
+    [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'triangle', 0.11, i * 0.11));
+    [784, 988, 1175, 1568].forEach((f) => tone(f, 0.9, 'triangle', 0.07, 0.5));
+    [523, 659, 784].forEach((f) => tone(f / 2, 0.9, 'sawtooth', 0.025, 0.5));
+  },
+  /** "Wah wah wah waaah" for everyone who did not win. */
+  lose: () => {
+    [392, 370, 349].forEach((f, i) => tone(f, 0.32, 'sawtooth', 0.07, i * 0.36, f * 0.97));
+    tone(330, 1.0, 'sawtooth', 0.07, 1.08, 262);
+  },
   pop: () => tone(880, 0.06, 'sine', 0.06),
 };
