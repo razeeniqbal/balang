@@ -3384,3 +3384,350 @@ p,
   white-space: nowrap;
   padding-inline: 14px;
 }
+
+/* ── phone layout v2: one column, less chrome ──────────────── */
+@media (max-width: 900px) {
+  .game {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'logo tools'
+      'top top'
+      'players players'
+      'jar jar'
+      'comp comp'
+      'kacau kacau'
+      'history history'
+      'hand hand';
+    gap: 10px;
+    padding: 10px 14px 18px;
+  }
+
+  /* let the centre column's pieces sit in the page grid */
+  .g-center {
+    display: contents;
+  }
+
+  .jar-wrap {
+    grid-area: jar;
+    justify-self: center;
+    width: min(220px, 58vw);
+    margin: 4px 0 6px;
+  }
+
+  .kacau-wrap {
+    grid-area: kacau;
+    justify-self: center;
+    width: 100%;
+  }
+
+  .history {
+    grid-area: history;
+  }
+
+  /* header */
+  .g-top {
+    gap: 0;
+  }
+
+  .stat-box {
+    padding: 4px 6px;
+    border-width: 1px;
+  }
+
+  .stat-box b {
+    font-size: 18px;
+  }
+
+  .stat-box span {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+
+  .round-box {
+    padding: 5px 12px 7px;
+    gap: 4px;
+  }
+
+  .round-box .display {
+    font-size: 16px;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* players: a light avatar row, state shown on the avatar ring */
+  .players {
+    background: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: 2px;
+    justify-content: safe center;
+  }
+
+  .player {
+    min-width: 62px;
+    padding: 4px 2px;
+    --av: 40px;
+    background: none;
+  }
+
+  .player.me {
+    background: rgba(255, 224, 122, 0.12);
+  }
+
+  .player .pname {
+    font-size: 11.5px;
+    max-width: 60px;
+  }
+
+  .player .pscore {
+    font-size: 14px;
+  }
+
+  .pstatus {
+    display: none;
+  }
+
+  .player.st-thinking .avatar {
+    box-shadow: 0 0 0 2px rgba(248, 201, 58, 0.7);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  .player.st-ready .avatar {
+    box-shadow: 0 0 0 2px #6fe08a;
+  }
+
+  .crown {
+    left: -2px;
+    top: -8px;
+  }
+
+  /* balang sekarang: one row of five tokens under the jar */
+  .comp {
+    padding: 8px 10px;
+  }
+
+  .comp-head {
+    margin-bottom: 6px;
+  }
+
+  .comp-head .panel-title {
+    font-size: 12px;
+  }
+
+  .comp-head .pill {
+    display: inline-flex;
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  .comp-list {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 6px 4px;
+    gap: 2px;
+  }
+
+  .comp-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 2px;
+    padding: 2px;
+    border: 0;
+  }
+
+  .comp-row img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .comp-row .count {
+    font-size: 18px;
+    line-height: 1;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .comp-row .bar-wrap {
+    width: 78%;
+    order: 3;
+  }
+
+  .comp-row .cname,
+  .comp-row .out {
+    display: none;
+  }
+
+  .comp-row .bar {
+    height: 5px;
+    margin-top: 2px;
+  }
+
+  /* history: one slim row */
+  .history {
+    flex-direction: row;
+    align-items: center;
+    padding: 7px 10px;
+    max-width: none;
+  }
+
+  .history-label {
+    display: none;
+  }
+
+  .history-list {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 2px;
+    overflow: visible;
+  }
+
+  .history-list img,
+  .history-list li.empty {
+    width: 18px;
+    height: 18px;
+  }
+
+  .history-list li.empty {
+    border-width: 1.5px;
+  }
+
+  .history-list li.mark::after {
+    right: -2px;
+  }
+
+  /* kacau */
+  .btn-kacau {
+    min-height: 54px;
+    font-size: 22px;
+  }
+
+  .btn-kacau:disabled {
+    font-size: 16px;
+  }
+
+  /* hand */
+  .hand-panel {
+    padding: 10px 10px 8px;
+  }
+
+  .section-head {
+    margin-bottom: 4px;
+  }
+
+  .section-head .panel-title {
+    font-size: 14px;
+  }
+
+  .card {
+    width: 128px;
+    min-height: 186px;
+    padding: 0 7px 8px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    padding: 5px 6px 6px;
+  }
+
+  .card-art {
+    height: 46px;
+    margin: 4px 0 0;
+  }
+
+  .card-art img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .card-art .op {
+    font-size: 15px;
+  }
+
+  .card-text {
+    font-size: 10.5px;
+    min-height: 40px;
+  }
+
+  .card-reward {
+    font-size: 21px;
+    border-radius: 10px;
+  }
+
+  .card-penalty {
+    font-size: 12px;
+  }
+
+  .card-settled {
+    top: 30px;
+    font-size: 10px;
+  }
+
+  .action-panel {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .milestone-n {
+    font-size: 30px;
+    min-width: 28px;
+  }
+
+  .action-lead {
+    font-size: 13px;
+  }
+
+  /* round reveal: five tokens in one row */
+  .reveal-card {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .reveal-card .banner-title {
+    font-size: 30px;
+  }
+
+  .isi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .reveal-card .isi-item {
+    padding: 6px 2px;
+    gap: 2px;
+  }
+
+  .reveal-card .isi-item img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .isi-item b {
+    font-size: 20px;
+  }
+
+  .isi-item span {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+
+  .reveal-card .card {
+    width: 128px;
+    min-height: 186px;
+  }
+}
+
+.history-list {
+  margin: 0;
+  padding: 2px;
+}
+
+.action-panel {
+  scroll-margin-top: 10px;
+}

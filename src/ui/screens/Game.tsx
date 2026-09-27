@@ -167,6 +167,19 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   }, [myClock, countdown]);
   const decideClock = countdown?.kind === 'decide' && !revealing ? countdown : null;
 
+  // Phones: bring whatever needs the player's attention on screen.
+  const actionRef = useRef<HTMLElement>(null);
+  const kacauRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!matchMedia('(max-width: 900px)').matches) return;
+    const el = iMustDecide ? actionRef.current : myTurn && !revealing ? kacauRef.current : null;
+    if (!el) return;
+    // When deciding, the cards below the action panel must be visible too.
+    const target = iMustDecide ? (el.parentElement ?? el) : el;
+    const r = target.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > innerHeight) el.scrollIntoView({ behavior: 'smooth', block: iMustDecide ? 'start' : 'center' });
+  }, [iMustDecide, myTurn, revealing]);
+
   const drawerName = view.players.find((p) => p.id === view.drawerId)?.name;
   const nm = view.nextMilestone;
   const toMilestone = nm ? nm.afterDraw - view.drawIndex : 0;
@@ -285,7 +298,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
           onDraw={draw}
         />
         {view.phase === 'DRAW_PHASE' && (
-          <div className="kacau-wrap">
+          <div className="kacau-wrap" ref={kacauRef}>
             <button className={`btn btn-kacau ${myTurn ? 'is-turn' : ''}`} disabled={!myTurn || !!revealing} onClick={draw}>
               {myTurn ? (
                 <span className="btn-stack center">
@@ -329,7 +342,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
             ))}
           </div>
         </section>
-        <section className={`panel action-panel ${discarding ? 'alert-red' : finalising ? 'alert-gold' : ''}`} aria-live="polite">
+        <section ref={actionRef} className={`panel action-panel ${discarding ? 'alert-red' : finalising ? 'alert-gold' : ''}`} aria-live="polite">
           {action}
         </section>
       </div>
