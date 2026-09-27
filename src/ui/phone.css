@@ -1585,3 +1585,14 @@ button.card-row:active:not(:disabled) {
 .ph-counts li.zero small {
   color: var(--red-700);
 }
+
+/* header (and its reaction menu) always above the player chips */
+.ph-top {
+  position: relative;
+  z-index: 50;
+}
+
+.ph-tools .react-pop {
+  z-index: 60;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
