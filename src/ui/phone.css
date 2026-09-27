@@ -1109,227 +1109,6 @@ button.card-row:active:not(:disabled) {
   display: none;
 }
 
-.mini-card {
-  --tone-a: var(--cream-100);
-  --tone-b: var(--cream-200);
-  --tone-ribbon: var(--green-700);
-  --tone-value: var(--green-800);
-  position: relative;
-  flex: 0 0 104px;
-  scroll-snap-align: start;
-  height: 146px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 6px 6px;
-  border-radius: 14px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  background:
-    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.7), transparent 60%),
-    linear-gradient(180deg, var(--tone-a), var(--tone-b));
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
-  color: var(--ink);
-  font: inherit;
-  transition:
-    transform 0.12s,
-    box-shadow 0.12s,
-    border-color 0.12s,
-    opacity 0.2s;
-}
-
-.mini-card.tone-gold {
-  --tone-a: #fff3c4;
-  --tone-b: #f9dc7a;
-  --tone-ribbon: var(--red-500);
-  --tone-value: var(--red-700);
-}
-
-.mini-card.tone-green {
-  --tone-a: #eaf6d4;
-  --tone-b: #bfe18d;
-}
-
-.mini-card.tone-blue {
-  --tone-a: #e1f1fb;
-  --tone-b: #a9d6f1;
-  --tone-ribbon: #1b3f6b;
-  --tone-value: #173a63;
-}
-
-.mini-card.tone-rose {
-  --tone-a: #fde6e6;
-  --tone-b: #f6b1b5;
-  --tone-ribbon: var(--red-700);
-  --tone-value: var(--red-700);
-}
-
-.mc-title {
-  margin: -2px -2px 0;
-  padding: 4px 6px 5px;
-  min-width: 84%;
-  border-radius: 0 0 10px 10px;
-  background: var(--tone-ribbon);
-  color: var(--cream-50);
-  font-family: var(--font-display);
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
-  text-align: center;
-}
-
-.mc-art {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-}
-
-.mc-art img {
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
-}
-
-.mc-art > img:only-child,
-.mc-art .no img {
-  width: 48px;
-  height: 48px;
-}
-
-.mc-art .op {
-  font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--green-800);
-}
-
-.mc-art .no {
-  position: relative;
-  display: inline-flex;
-}
-
-.mc-art .no::after {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border: 4px solid var(--red-500);
-  border-radius: 50%;
-  background: linear-gradient(45deg, transparent 45%, var(--red-500) 45% 55%, transparent 55%);
-}
-
-.mc-settled {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-6deg);
-  padding: 1px 5px;
-  border-radius: 5px;
-  border: 1.5px solid currentColor;
-  background: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.mc-settled.yes {
-  color: var(--ok);
-}
-
-.mc-settled.no {
-  color: var(--bad);
-}
-
-.mc-value {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.mc-value b {
-  width: 100%;
-  padding: 2px 0;
-  border-radius: 9px;
-  background: var(--tone-value);
-  color: var(--gold-300);
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 19px;
-  line-height: 1.05;
-  text-align: center;
-}
-
-.mc-value small {
-  margin-top: -3px;
-  padding: 1px 9px;
-  border-radius: 0 0 8px 8px;
-  background: var(--red-500);
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 11.5px;
-}
-
-.mc-flag {
-  position: absolute;
-  top: -8px;
-  right: -6px;
-  z-index: 2;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  border: 2px solid #fff;
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.mini-card.is-keep {
-  border-color: var(--gold-400);
-  box-shadow:
-    0 0 0 3px rgba(248, 201, 58, 0.55),
-    0 0 14px rgba(248, 201, 58, 0.5);
-  transform: translateY(-4px);
-}
-
-.mini-card.is-keep .mc-flag {
-  background: var(--ok);
-}
-
-.mini-card.is-discard {
-  border-color: var(--red-500);
-  box-shadow: 0 0 0 3px rgba(216, 49, 43, 0.45);
-  transform: translateY(-4px) rotate(-2deg);
-  opacity: 0.8;
-}
-
-.mini-card.is-discard .mc-flag {
-  background: var(--red-500);
-}
-
-.mini-card.is-locked .mc-flag {
-  background: var(--green-700);
-}
-
-.mini-card.is-kawkaw {
-  border-color: #ff7a1a;
-  box-shadow:
-    0 0 0 3px rgba(255, 122, 26, 0.45),
-    0 0 16px rgba(255, 100, 20, 0.5);
-}
-
-.mini-card.is-kawkaw .mc-flag {
-  background: linear-gradient(180deg, #ffb13b, #e8430f);
-}
-
-.mini-card.settled-false:not(.is-discard) {
-  filter: saturate(0.55);
-}
-
-.mini-card:active {
-  transform: scale(0.97);
-}
-
 /* ── pop-out card detail ───────────────────────────────────── */
 .card-detail {
   display: flex;
@@ -1404,21 +1183,6 @@ button.card-row:active:not(:disabled) {
     height: 15px;
   }
 
-  .mini-card {
-    flex-basis: 96px;
-    height: 132px;
-  }
-
-  .mc-art img {
-    width: 30px;
-    height: 30px;
-  }
-
-  .mc-art > img:only-child,
-  .mc-art .no img {
-    width: 42px;
-    height: 42px;
-  }
 
   .ph-btn,
   .ph-note {
@@ -1501,45 +1265,6 @@ button.card-row:active:not(:disabled) {
   max-height: none;
 }
 
-.mc-text {
-  display: none;
-}
-
-/* tall phones: show the condition on the card itself */
-@media (max-width: 640px) and (min-height: 740px) {
-  .ph-jar {
-    height: clamp(150px, calc(100dvh - 560px), 240px);
-  }
-
-  .mini-card {
-    flex-basis: 128px;
-    height: 196px;
-  }
-
-  .mc-art {
-    flex: none;
-    height: 52px;
-  }
-
-  .mc-text {
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
-    margin: 2px 0 4px;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.22;
-    text-align: center;
-    color: #2b3a31;
-  }
-
-  .mc-settled {
-    top: 26px;
-  }
-}
-
 /* players wrap instead of scrolling, so reaction bubbles aren't clipped */
 .phone .players {
   overflow: visible;
@@ -1595,4 +1320,99 @@ button.card-row:active:not(:disabled) {
 .ph-tools .react-pop {
   z-index: 60;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ── phone hand: the real card, shrunk as a whole ──────────
+   Every card is laid out at its desktop size (160×224) and then
+   scaled uniformly with `zoom`, so its proportions never change. */
+.ph-strip {
+  --card-zoom: 0.7;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ph-card {
+  flex: none;
+  scroll-snap-align: start;
+  zoom: var(--card-zoom);
+}
+
+.ph-strip .card {
+  width: 160px;
+  height: 224px;
+  min-height: 0;
+  padding: 0 10px 10px;
+  margin: 0;
+  transform: none;
+}
+
+.ph-strip .card-title {
+  font-size: 15px;
+  padding: 6px 8px 7px;
+}
+
+.ph-strip .card-art {
+  height: 70px;
+  margin: 6px 0 2px;
+}
+
+.ph-strip .card-art img {
+  width: 58px;
+  height: 58px;
+}
+
+.ph-strip .card-art .op {
+  font-size: 18px;
+}
+
+.ph-strip .card-text {
+  font-size: 12.5px;
+  min-height: 48px;
+  line-height: 1.3;
+}
+
+.ph-strip .card-reward {
+  font-size: 32px;
+}
+
+.ph-strip .card-penalty {
+  font-size: 15px;
+}
+
+.ph-strip .card-settled {
+  top: 36px;
+  font-size: 12px;
+}
+
+.ph-strip .card-flag {
+  top: -10px;
+  right: -8px;
+}
+
+/* selected cards lift without changing shape */
+.ph-strip .card.is-keep,
+.ph-strip .card.is-discard {
+  transform: translateY(-6px);
+}
+
+.ph-strip .card.is-discard {
+  transform: translateY(-6px) rotate(-2deg);
+}
+
+/* room for the lift and the corner badge */
+.ph-strip {
+  padding-top: 12px;
+}
+
+/* bigger on taller phones */
+@media (max-width: 640px) and (min-height: 740px) {
+  .ph-strip {
+    --card-zoom: 0.82;
+  }
+}
+
+@media (max-width: 640px) and (max-height: 700px) {
+  .ph-strip {
+    --card-zoom: 0.62;
+  }
 }

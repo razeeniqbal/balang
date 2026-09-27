@@ -189,33 +189,3 @@ export function CardRow({ card, state = 'default', kawkaw, multiplier = 1, settl
     </div>
   );
 }
-
-/** Compact portrait card for the phone's swipe strip; tapping opens the full card. */
-export function MiniCard({ card, state = 'default', kawkaw, multiplier = 1, settled = 'open', onClick }: Props) {
-  const title = cardTitle(card);
-  const reward = card.reward * (kawkaw ? multiplier : 1);
-  const penalty = card.penalty * (kawkaw ? multiplier : 1);
-  const flag = FLAG[state];
-  const cls = ['mini-card', `tone-${CARD_TONE[card.kind]}`, state !== 'default' && `is-${state}`, kawkaw && 'is-kawkaw', settled !== 'open' && `settled-${settled}`]
-    .filter(Boolean)
-    .join(' ');
-  return (
-    <button className={cls} onClick={onClick} aria-label={`${title}. ${cardText(card)} Ganjaran ${fmt(reward)}, penalti ${fmt(penalty)}.${flag ? ` ${flag.label}.` : ''} Tekan untuk lihat.`}>
-      {flag && (
-        <span className="mc-flag" aria-hidden>
-          <Icon name={kawkaw && state === 'locked' ? 'flame' : flag.icon} size={13} />
-        </span>
-      )}
-      <span className="mc-title">{title}</span>
-      <span className="mc-art" aria-hidden>
-        <Art card={card} />
-      </span>
-      <span className="mc-text">{cardText(card)}</span>
-      {settled !== 'open' && <span className={`mc-settled ${settled === 'true' ? 'yes' : 'no'}`}>{settled === 'true' ? 'DAH PASTI' : 'DAH GAGAL'}</span>}
-      <span className="mc-value">
-        <b>+{fmt(reward)}</b>
-        <small>−{fmt(penalty)}</small>
-      </span>
-    </button>
-  );
-}

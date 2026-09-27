@@ -3,7 +3,7 @@ import type { MatchClient } from '../../engine/client';
 import { chipImage, food, foodImage } from '../../engine/foods';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
-import { Card, CardRow, MiniCard, type CardState } from '../components/Card';
+import { Card, CardRow, type CardState } from '../components/Card';
 import { Logo, Modal, fmt } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Jar } from '../components/Jar';
@@ -447,18 +447,19 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
           </div>
           <div className="ph-strip">
             {view.hand.map((c) => (
-              <MiniCard
-                key={c.id}
-                card={c}
-                state={cardState(c)}
-                kawkaw={view.kawkawCardId === c.id}
-                multiplier={view.config.kawkawMultiplier}
-                settled={view.handOutcomes[c.id]}
-                onClick={() => {
-                  sfx.pop();
-                  setDetailId(c.id);
-                }}
-              />
+              <div key={c.id} className="ph-card">
+                <Card
+                  card={c}
+                  state={cardState(c)}
+                  kawkaw={view.kawkawCardId === c.id}
+                  multiplier={view.config.kawkawMultiplier}
+                  settled={view.handOutcomes[c.id]}
+                  onClick={() => {
+                    sfx.pop();
+                    setDetailId(c.id);
+                  }}
+                />
+              </div>
             ))}
           </div>
         </section>
