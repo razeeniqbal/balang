@@ -626,7 +626,7 @@ button.card-row:active:not(:disabled) {
 @media (max-width: 640px) {
   .lobby {
     padding: 12px 12px 16px;
-    align-items: start;
+    align-items: center;
   }
 
   .lobby-grid {
@@ -721,7 +721,7 @@ button.card-row:active:not(:disabled) {
 @media (max-width: 640px) {
   .reveal-screen {
     padding: 10px 10px 12px;
-    align-items: start;
+    align-items: center;
   }
 
   .reveal-card {

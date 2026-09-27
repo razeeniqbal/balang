@@ -3788,3 +3788,13 @@ p,
   color: var(--gold-400);
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
 }
+
+/* results: centre vertically when there's room; auto margins never clip
+   when the content is taller than the screen (it just scrolls) */
+.results > :first-child {
+  margin-top: auto;
+}
+
+.results > :last-child {
+  margin-bottom: auto;
+}
