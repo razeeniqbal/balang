@@ -3731,3 +3731,7 @@ p,
 .action-panel {
   scroll-margin-top: 10px;
 }
+
+.home-links a.btn {
+  text-decoration: none;
+}

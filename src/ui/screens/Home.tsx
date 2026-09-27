@@ -5,6 +5,7 @@ import { AVATARS } from '../../net/host';
 import { Logo, Modal, avatarSrc } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Tutorial } from '../components/Tutorial';
+import { Link } from '../router';
 
 const KEY = 'balang.profile';
 
@@ -133,9 +134,17 @@ export function Home({ onStart, inviteCode }: { onStart: (o: StartOptions) => vo
           )}
         </section>
 
-        <button className="btn btn-ghost btn-sm how-btn" onClick={() => setHelp(true)}>
-          <Icon name="help" size={18} /> Cara Main
-        </button>
+        <div className="home-links">
+          <button className="btn btn-ghost btn-sm" onClick={() => setHelp(true)}>
+            <Icon name="help" size={18} /> Cara Main
+          </button>
+          <Link to="/docs" className="btn btn-ghost btn-sm">
+            Dokumentasi
+          </Link>
+          <Link to="/" className="btn btn-ghost btn-sm">
+            <Icon name="back" size={18} /> Laman utama
+          </Link>
+        </div>
       </div>
 
       {help && (

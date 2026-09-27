@@ -10,6 +10,16 @@ npm test         # engine tests
 npm run build    # production build → dist/
 ```
 
+## Pages
+
+| Path | What |
+|---|---|
+| `/` | Landing page |
+| `/main` | The game (invite links are `/main?room=MY-1234`) |
+| `/docs` | Rules and card reference, generated from the engine config |
+
+`vercel.json` rewrites every path to `index.html` so these work on refresh.
+
 ## How multiplayer works
 
 - **Buat Bilik** makes the host's browser the game authority. It holds the secret

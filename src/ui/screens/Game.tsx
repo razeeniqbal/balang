@@ -3,7 +3,7 @@ import type { MatchClient } from '../../engine/client';
 import { chipImage, food, foodImage } from '../../engine/foods';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
-import { Card, CardRow, type CardState } from '../components/Card';
+import { Card, CardRow, MiniCard, type CardState } from '../components/Card';
 import { Logo, Modal, fmt } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Jar } from '../components/Jar';
@@ -127,11 +127,13 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const [selected, setSelected] = useState<string[]>([]);
   const [kawOpen, setKawOpen] = useState(false);
   const [kawChoice, setKawChoice] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const decisionKey = `${view.round}:${view.phase}:${view.drawIndex}`;
   useEffect(() => {
     setSelected([]);
     setKawOpen(false);
     setKawChoice(null);
+    setDetailId(null);
   }, [decisionKey]);
 
   const myTurn = view.phase === 'DRAW_PHASE' && view.drawerId === view.me;
@@ -345,11 +347,13 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     </>
   );
 
+  const detail = detailId ? view.hand.find((c) => c.id === detailId) : undefined;
+
   if (phone) {
     const left = Object.values(view.remaining).reduce((a, b) => a + b, 0);
     let listHint: string;
-    if (discarding) listHint = `Tekan ${need} kad untuk dibuang`;
-    else if (finalising) listHint = `Tekan ${need} kad untuk dikunci`;
+    if (discarding) listHint = `Pilih ${need} untuk dibuang · ${selected.length}/${need}`;
+    else if (finalising) listHint = `Pilih ${need} untuk dikunci · ${selected.length}/${need}`;
     else if (view.locked) listHint = 'Dikunci';
     else if (nm) listHint = `${Math.max(toMilestone, 0)} cabutan lagi · ${nm.lock ? `kunci ${nm.keep}` : `buang ${view.hand.length - nm.keep}`}`;
     else listHint = '';
@@ -411,15 +415,17 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
         <Players view={view} reactions={bubbles} />
 
         <section className="ph-stage">
-          <Jar
-            roundKey={`r${view.round}`}
-            foods={view.foods}
-            startCounts={view.startCounts}
-            remaining={view.remaining}
-            shaking={shaking}
-            canDraw={myTurn && !revealing}
-            onDraw={draw}
-          />
+          <div className="ph-jar">
+            <Jar
+              roundKey={`r${view.round}`}
+              foods={view.foods}
+              startCounts={view.startCounts}
+              remaining={view.remaining}
+              shaking={shaking}
+              canDraw={myTurn && !revealing}
+              onDraw={draw}
+            />
+          </div>
           <ul className="ph-counts" aria-label="Isi balang sekarang">
             {view.foods.map((f) => (
               <li key={f} className={view.remaining[f] === 0 ? 'zero' : ''} aria-label={`${food(f).name}: ${view.remaining[f]} tinggal daripada ${view.startCounts[f]}`}>
@@ -438,22 +444,67 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
             <h2 className="panel-title">KAD ANDA · {view.hand.length}</h2>
             {listHint && <span className="ph-hint">{listHint}</span>}
           </div>
-          <div className="ph-list">
+          <div className="ph-strip">
             {view.hand.map((c) => (
-              <CardRow
+              <MiniCard
                 key={c.id}
                 card={c}
                 state={cardState(c)}
                 kawkaw={view.kawkawCardId === c.id}
                 multiplier={view.config.kawkawMultiplier}
                 settled={view.handOutcomes[c.id]}
-                onClick={discarding || finalising ? () => toggle(c.id) : undefined}
+                onClick={() => {
+                  sfx.pop();
+                  setDetailId(c.id);
+                }}
               />
             ))}
           </div>
         </section>
 
         <footer className="ph-controls">{controls}</footer>
+        {detail && (
+          <Modal label="Butiran kad" onClose={() => setDetailId(null)}>
+            <div className="card-detail">
+              <Card
+                card={detail}
+                state={cardState(detail)}
+                kawkaw={view.kawkawCardId === detail.id}
+                multiplier={view.config.kawkawMultiplier}
+                settled={view.handOutcomes[detail.id]}
+              />
+              {view.handOutcomes[detail.id] !== 'open' && (
+                <p className="note center">
+                  {view.handOutcomes[detail.id] === 'true' ? 'Kad ini sudah pasti betul.' : 'Kad ini sudah pasti salah.'}
+                </p>
+              )}
+              {(discarding || finalising) && (
+                <button
+                  className={`btn ${selected.includes(detail.id) ? 'btn-ghost' : discarding ? 'btn-red' : 'btn-green'}`}
+                  onClick={() => {
+                    toggle(detail.id);
+                    setDetailId(null);
+                  }}
+                >
+                  {selected.includes(detail.id) ? (
+                    'Batal pilih'
+                  ) : discarding ? (
+                    <>
+                      <Icon name="trash" /> Pilih untuk buang
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="lock" /> Pilih untuk kunci
+                    </>
+                  )}
+                </button>
+              )}
+              <button className="btn btn-ghost btn-sm" onClick={() => setDetailId(null)}>
+                Tutup
+              </button>
+            </div>
+          </Modal>
+        )}
         {overlays}
       </main>
     );

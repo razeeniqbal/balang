@@ -8,7 +8,7 @@ import { Avatar, Logo, Modal } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Tutorial } from '../components/Tutorial';
 
-export const inviteLink = (code: string) => `${location.origin}${location.pathname}?room=${code}`;
+export const inviteLink = (code: string) => `${location.origin}/main?room=${code}`;
 
 export function Lobby({ view, match, onExit }: { view: GameView; match: MatchClient; onExit: () => void }) {
   const isHost = match.isHostDevice;
