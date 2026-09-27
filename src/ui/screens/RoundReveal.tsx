@@ -1,11 +1,13 @@
 import { food, foodImage } from '../../engine/foods';
 import type { MatchClient } from '../../engine/client';
 import type { GameView } from '../../engine/types';
-import { Card } from '../components/Card';
+import { Card, CardRow } from '../components/Card';
+import { PHONE, useMedia } from '../useMedia';
 import { sfx } from '../sfx';
 
 export function RoundReveal({ view, match }: { view: GameView; match: MatchClient }) {
   const isHost = match.isHostDevice;
+  const phone = useMedia(PHONE);
   const total = Object.values(view.startCounts).reduce((a, b) => a + b, 0);
   return (
     <main className="reveal-screen">
@@ -27,11 +29,19 @@ export function RoundReveal({ view, match }: { view: GameView; match: MatchClien
           <h2 className="panel-title" style={{ textAlign: 'center' }}>
             KAD RAMALAN RAHSIA ANDA · {view.hand.length}
           </h2>
-          <div className="cards" style={{ justifyContent: 'safe center' }}>
-            {view.hand.map((c) => (
-              <Card key={c.id} card={c} />
-            ))}
-          </div>
+          {phone ? (
+            <div className="reveal-rows">
+              {view.hand.map((c) => (
+                <CardRow key={c.id} card={c} />
+              ))}
+            </div>
+          ) : (
+            <div className="cards" style={{ justifyContent: 'safe center' }}>
+              {view.hand.map((c) => (
+                <Card key={c.id} card={c} />
+              ))}
+            </div>
+          )}
         </section>
         <p className="note" style={{ textAlign: 'center', maxWidth: 560 }}>
           Semua pemain nampak isi balang yang sama, tapi kad masing-masing rahsia. Kad yang susah berlaku = ganjaran besar.

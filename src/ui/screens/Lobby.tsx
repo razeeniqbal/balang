@@ -17,6 +17,7 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
   const [qr, setQr] = useState('');
   const [copied, setCopied] = useState(false);
   const [help, setHelp] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const humans = view.players.filter((p) => !p.isBot).length;
   const canStart = view.players.length >= MIN_PLAYERS;
   const mode = view.config.rounds === MODES.quick.rounds ? 'quick' : 'classic';
@@ -65,8 +66,17 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
               <p className="note center">Kawan boleh imbas QR, buka pautan, atau tekan “Sertai Bilik” dan masukkan kod di atas.</p>
               <div className="invite-actions">
                 <button className="btn btn-green btn-sm" onClick={copy}>
-                  <Icon name={copied ? 'check' : 'copy'} size={18} /> {copied ? 'Disalin!' : 'Salin pautan'}
+                  <Icon name={copied ? 'check' : 'copy'} size={18} /> {copied ? 'Disalin!' : (
+                    <>
+                      Salin<span className="wide-only"> pautan</span>
+                    </>
+                  )}
                 </button>
+                {qr && (
+                  <button className="btn btn-green btn-sm qr-btn" onClick={() => setShowQr(true)}>
+                    QR
+                  </button>
+                )}
                 {'share' in navigator && (
                   <button className="btn btn-green btn-sm" onClick={share}>
                     <Icon name="share" size={18} /> Kongsi
@@ -120,7 +130,7 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
                   </button>
                 </li>
               ) : (
-                <li key={i} className="lobby-row empty" aria-hidden>
+                <li key={i} className="lobby-row empty placeholder" aria-hidden>
                   Menunggu pemain…
                 </li>
               ),
@@ -181,6 +191,14 @@ export function Lobby({ view, match, onExit }: { view: GameView; match: MatchCli
           </div>
         </section>
       </div>
+
+      {showQr && (
+        <Modal label="Kod QR bilik" onClose={() => setShowQr(false)}>
+          <h2 className="banner-title">{view.roomCode}</h2>
+          <img className="qr-big" src={qr} alt={`Kod QR untuk sertai bilik ${view.roomCode}`} />
+          <p className="note center">Minta kawan imbas kod ini dengan kamera telefon.</p>
+        </Modal>
+      )}
 
       {help && (
         <Modal label="Cara main" onClose={() => setHelp(false)}>

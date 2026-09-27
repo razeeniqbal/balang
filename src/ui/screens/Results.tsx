@@ -4,7 +4,8 @@ import type { MatchClient } from '../../engine/client';
 import { cardTitle } from '../../engine/predictions';
 import { ranking, statsFor } from '../../engine/stats';
 import type { GameView, ScoreEvent } from '../../engine/types';
-import { Card } from '../components/Card';
+import { Card, CardRow } from '../components/Card';
+import { PHONE, useMedia } from '../useMedia';
 import { Avatar, Confetti, Logo, fmt, signed } from '../components/common';
 import { Icon } from '../components/Icon';
 import { renderShareCard } from '../share';
@@ -27,6 +28,7 @@ export function RoundResults({ view, match }: { view: GameView; match: MatchClie
   const mine = view.lastRoundEvents.filter((e) => e.playerId === view.me);
   const myDelta = mine.reduce((s, e) => s + e.delta, 0);
   const isHost = match.isHostDevice;
+  const phone = useMedia(PHONE);
   const last = view.round >= view.config.rounds;
   const ranked = ranking(view.players, view.scores);
 
@@ -40,11 +42,19 @@ export function RoundResults({ view, match }: { view: GameView; match: MatchClie
       <div className="panel results-card">
         <h1 className="banner-title">KEPUTUSAN PUSINGAN {view.round}</h1>
 
-        <div className="res-mine">
-          {mine.map((e) => (
-            <Card key={e.card.id} card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
-          ))}
-        </div>
+        {phone ? (
+          <div className="res-rows">
+            {mine.map((e) => (
+              <CardRow key={e.card.id} card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+            ))}
+          </div>
+        ) : (
+          <div className="res-mine">
+            {mine.map((e) => (
+              <Card key={e.card.id} card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+            ))}
+          </div>
+        )}
         <div className="res-total" role="status">
           Pusingan ini: <span className={myDelta >= 0 ? 'pos' : 'neg'}>{signed(myDelta)}</span>
         </div>

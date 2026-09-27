@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MatchClient } from '../../engine/client';
-import { food, foodImage } from '../../engine/foods';
+import { chipImage, food, foodImage } from '../../engine/foods';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
 import { Card, CardRow, type CardState } from '../components/Card';
@@ -9,6 +9,7 @@ import { Icon } from '../components/Icon';
 import { Jar } from '../components/Jar';
 import { Composition, History, Players, TopBar } from '../components/Panels';
 import { useSettings } from '../settings';
+import { PHONE, useMedia } from '../useMedia';
 import { sfx } from '../sfx';
 
 const REACTIONS = ['KAW-KAW!', 'Wahh!', 'Alamak...', 'Hmm...', 'Wehhh!', 'Nice!'];
@@ -27,17 +28,6 @@ function useReactionBubbles(view: GameView) {
     return () => timers.forEach(clearTimeout);
   }, [view.reactions]);
   return bubbles;
-}
-
-function useMedia(query: string) {
-  const [match, setMatch] = useState(() => matchMedia(query).matches);
-  useEffect(() => {
-    const mq = matchMedia(query);
-    const on = () => setMatch(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, [query]);
-  return match;
 }
 
 /** Local countdown from the host's "ms left" snapshot (device clocks are never compared). */
@@ -101,7 +91,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const [settings] = useSettings();
   const revealMs = TIMING[settings.fast ? 'fast' : 'normal'].reveal;
   const bubbles = useReactionBubbles(view);
-  const phone = useMedia('(max-width: 640px)');
+  const phone = useMedia(PHONE);
 
   // ── draw animation ─────────────────────────────────────────
   const [revealing, setRevealing] = useState<{ food: string; by: string; k: number } | null>(null);
@@ -364,45 +354,41 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     else if (nm) listHint = `${Math.max(toMilestone, 0)} cabutan lagi · ${nm.lock ? `kunci ${nm.keep}` : `buang ${view.hand.length - nm.keep}`}`;
     else listHint = '';
 
+    // One button, with the turn timer drawn along its bottom edge.
+    const timed = (c: Countdown | null | undefined) =>
+      c ? { style: { ['--pct' as string]: `${c.pct * 100}%` } as React.CSSProperties, secs: <span className={`ph-secs ${c.secs <= 5 ? 'low' : ''}`}>{c.secs}s</span> } : { style: undefined, secs: null };
     let controls;
     if (discarding) {
+      const t = timed(decideClock);
       controls = (
-        <>
-          {decideClock && <TimerBar c={decideClock} label="Masa" />}
-          <button className="btn btn-red" disabled={selected.length !== need} onClick={confirmDiscard}>
-            <Icon name="trash" /> BUANG {selected.length}/{need} KAD
-          </button>
-        </>
+        <button className={`btn btn-red ph-btn ${decideClock ? 'has-timer' : ''}`} style={t.style} disabled={selected.length !== need} onClick={confirmDiscard}>
+          <Icon name="trash" /> BUANG {selected.length}/{need} {t.secs}
+        </button>
       );
     } else if (finalising) {
+      const t = timed(decideClock);
       controls = (
-        <>
-          {decideClock && <TimerBar c={decideClock} label="Masa" />}
-          <button className="btn btn-green" disabled={selected.length !== need} onClick={() => setKawOpen(true)}>
-            <Icon name="lock" /> KUNCI {selected.length}/{need} KAD
-          </button>
-        </>
+        <button className={`btn btn-green ph-btn ${decideClock ? 'has-timer' : ''}`} style={t.style} disabled={selected.length !== need} onClick={() => setKawOpen(true)}>
+          <Icon name="lock" /> KUNCI {selected.length}/{need} {t.secs}
+        </button>
       );
     } else if (view.phase === 'DRAW_PHASE') {
+      const c = countdown?.kind === 'draw' && !revealing ? countdown : null;
+      const t = timed(c);
       controls = (
-        <>
-          {countdown?.kind === 'draw' && !revealing && <TimerBar c={countdown} label={myTurn ? 'Masa anda' : 'Masa'} />}
-          <button className={`btn btn-kacau ${myTurn ? 'is-turn' : ''}`} disabled={!myTurn || !!revealing} onClick={draw}>
-            {myTurn ? 'KACAU' : `Giliran ${drawerName}…`}
-          </button>
-        </>
+        <button className={`btn btn-kacau ph-btn ${myTurn ? 'is-turn' : ''} ${c ? 'has-timer' : ''}`} style={t.style} disabled={!myTurn || !!revealing} onClick={draw}>
+          {myTurn ? 'KACAU' : `Giliran ${drawerName}`} {t.secs}
+        </button>
       );
     } else if (inDecision && !revealing) {
+      const t = timed(decideClock);
       controls = (
-        <>
-          {decideClock && <TimerBar c={decideClock} label="Masa" />}
-          <p className="ph-note">
-            <span className="dots" aria-hidden /> Menunggu {waitingOn.map((p) => p.name).join(', ')}…
-          </p>
-        </>
+        <p className={`ph-note ${decideClock ? 'has-timer' : ''}`} style={t.style}>
+          <span className="dots" aria-hidden /> Menunggu {waitingOn.map((p) => p.name).join(', ')} {t.secs}
+        </p>
       );
     } else {
-      controls = <p className="ph-note">{view.locked ? `Pilihan dikunci. ${view.config.draws - view.drawIndex} cabutan lagi.` : ' '}</p>;
+      controls = <p className="ph-note">{view.locked ? `Dikunci. ${view.config.draws - view.drawIndex} cabutan lagi.` : ' '}</p>;
     }
 
     return (
@@ -434,7 +420,15 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
             canDraw={myTurn && !revealing}
             onDraw={draw}
           />
-          <Composition view={view} />
+          <ul className="ph-counts" aria-label="Isi balang sekarang">
+            {view.foods.map((f) => (
+              <li key={f} className={view.remaining[f] === 0 ? 'zero' : ''} aria-label={`${food(f).name}: ${view.remaining[f]} tinggal daripada ${view.startCounts[f]}`}>
+                <img src={chipImage(f)} alt="" />
+                <b>{view.remaining[f]}</b>
+                <i style={{ ['--w' as string]: `${(view.remaining[f] / view.startCounts[f]) * 100}%`, ['--c' as string]: food(f).color }} />
+              </li>
+            ))}
+          </ul>
         </section>
 
         <History view={view} />
