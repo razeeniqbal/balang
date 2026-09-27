@@ -1,0 +1,9 @@
+{
+  "name": "BALANG — Agak. Risiko. Menang.",
+  "short_name": "BALANG",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e3b28",
+  "theme_color": "#0e3b28",
+  "icons": [{ "src": "/assets/chips/kuih-lapis.png", "sizes": "160x160", "type": "image/png" }]
+}
