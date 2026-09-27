@@ -1539,3 +1539,49 @@ button.card-row:active:not(:disabled) {
     top: 26px;
   }
 }
+
+/* players wrap instead of scrolling, so reaction bubbles aren't clipped */
+.phone .players {
+  overflow: visible;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 4px;
+  position: relative;
+  z-index: 30;
+}
+
+.phone .bubble {
+  left: 50%;
+  top: auto;
+  bottom: calc(100% + 4px);
+  transform-origin: bottom center;
+  translate: -50% 0;
+  z-index: 40;
+  border-radius: 12px 12px 12px 12px;
+}
+
+.phone .bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  translate: -50% 0;
+  rotate: 45deg;
+  background: var(--cream-50);
+}
+
+/* drawn count under each kuih */
+.ph-counts small {
+  flex: 0 0 100%;
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink-soft);
+}
+
+.ph-counts li.zero small {
+  color: var(--red-700);
+}

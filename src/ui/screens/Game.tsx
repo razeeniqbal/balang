@@ -432,6 +432,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                 <img src={chipImage(f)} alt="" />
                 <b>{view.remaining[f]}</b>
                 <i style={{ ['--w' as string]: `${(view.remaining[f] / view.startCounts[f]) * 100}%`, ['--c' as string]: food(f).color }} />
+                <small>keluar {view.startCounts[f] - view.remaining[f]}</small>
               </li>
             ))}
           </ul>
