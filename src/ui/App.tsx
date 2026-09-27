@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { normaliseCode, persistentClientId, type MatchClient } from '../engine/client';
 import { GuestMatch } from '../net/guest';
 import { HostMatch } from '../net/host';
@@ -50,6 +50,26 @@ function MatchScreens({ match, onExit }: { match: MatchClient; onExit: () => voi
   const [settings] = useSettings();
   const [showSettings, setShowSettings] = useState(false);
 
+  // The 15th draw ends the round instantly. Decide during this render (not in
+  // an effect) to keep the game mounted until that token's reveal has played;
+  // switching away even for one frame would lose the animation.
+  const prev = useRef(view);
+  const holdUntil = useRef(0);
+  if (view !== prev.current) {
+    const was = prev.current;
+    if (view?.phase === 'ROUND_RESOLUTION' && was?.phase === 'DRAW_PHASE' && view.drawIndex > was.drawIndex) {
+      holdUntil.current = Date.now() + (settings.fast ? 1100 : 2300) + 700;
+    }
+    prev.current = view;
+  }
+  const [, rerender] = useState(0);
+  const holding = view?.phase === 'ROUND_RESOLUTION' && Date.now() < holdUntil.current;
+  useEffect(() => {
+    if (!holding) return;
+    const t = setTimeout(() => rerender((n) => n + 1), holdUntil.current - Date.now() + 20);
+    return () => clearTimeout(t);
+  }, [holding]);
+
   useEffect(() => {
     match.setSpeed(settings.fast);
     match.setAutoDraw(settings.autoDraw);
@@ -80,7 +100,7 @@ function MatchScreens({ match, onExit }: { match: MatchClient; onExit: () => voi
       screen = <RoundReveal view={view} match={match} />;
       break;
     case 'ROUND_RESOLUTION':
-      screen = <RoundResults view={view} match={match} />;
+      screen = holding ? <Game view={view} match={match} onSettings={() => setShowSettings(true)} /> : <RoundResults view={view} match={match} />;
       break;
     case 'FINAL_RESULTS':
       screen = <FinalResults view={view} match={match} onExit={onExit} />;

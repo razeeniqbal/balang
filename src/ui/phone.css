@@ -1334,10 +1334,10 @@ button.card-row:active:not(:disabled) {
 .ph-card {
   flex: none;
   scroll-snap-align: start;
-  zoom: var(--card-zoom);
+  zoom: var(--card-zoom, 0.7);
 }
 
-.ph-strip .card {
+.ph-card .card {
   width: 160px;
   height: 224px;
   min-height: 0;
@@ -1346,56 +1346,56 @@ button.card-row:active:not(:disabled) {
   transform: none;
 }
 
-.ph-strip .card-title {
+.ph-card .card-title {
   font-size: 15px;
   padding: 6px 8px 7px;
 }
 
-.ph-strip .card-art {
+.ph-card .card-art {
   height: 70px;
   margin: 6px 0 2px;
 }
 
-.ph-strip .card-art img {
+.ph-card .card-art img {
   width: 58px;
   height: 58px;
 }
 
-.ph-strip .card-art .op {
+.ph-card .card-art .op {
   font-size: 18px;
 }
 
-.ph-strip .card-text {
+.ph-card .card-text {
   font-size: 12.5px;
   min-height: 48px;
   line-height: 1.3;
 }
 
-.ph-strip .card-reward {
+.ph-card .card-reward {
   font-size: 32px;
 }
 
-.ph-strip .card-penalty {
+.ph-card .card-penalty {
   font-size: 15px;
 }
 
-.ph-strip .card-settled {
+.ph-card .card-settled {
   top: 36px;
   font-size: 12px;
 }
 
-.ph-strip .card-flag {
+.ph-card .card-flag {
   top: -10px;
   right: -8px;
 }
 
 /* selected cards lift without changing shape */
-.ph-strip .card.is-keep,
-.ph-strip .card.is-discard {
+.ph-card .card.is-keep,
+.ph-card .card.is-discard {
   transform: translateY(-6px);
 }
 
-.ph-strip .card.is-discard {
+.ph-card .card.is-discard {
   transform: translateY(-6px) rotate(-2deg);
 }
 
@@ -1414,5 +1414,55 @@ button.card-row:active:not(:disabled) {
 @media (max-width: 640px) and (max-height: 700px) {
   .ph-strip {
     --card-zoom: 0.62;
+  }
+}
+
+/* ── real cards on reveal, results and KAW-KAW (phones) ─────── */
+.ph-card-grid {
+  --card-zoom: 0.62;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.ph-card-pair {
+  --card-zoom: 0.8;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+@media (min-width: 385px) {
+  .ph-card-grid {
+    --card-zoom: 0.68;
+  }
+}
+
+@media (max-width: 640px) {
+  .kaw-grid {
+    --card-zoom: 0.74;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .kaw-option {
+    width: calc(160px * 0.74);
+  }
+
+  .kaw-preview {
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+
+  .kaw-preview.off {
+    font-size: 11px;
   }
 }

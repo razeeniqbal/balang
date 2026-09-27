@@ -3,7 +3,7 @@ import type { MatchClient } from '../../engine/client';
 import { chipImage, food, foodImage } from '../../engine/foods';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
-import { Card, CardRow, type CardState } from '../components/Card';
+import { Card, type CardState } from '../components/Card';
 import { Logo, Modal, fmt } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Jar } from '../components/Jar';
@@ -114,7 +114,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     setRevealing({ food: f, by: v.players[drawerIdx]?.name ?? '', k: v.drawIndex });
     sfx.shake();
     const t1 = setTimeout(() => setShaking(false), 550);
-    const t2 = setTimeout(() => sfx.draw(), 250);
+    const t2 = setTimeout(() => sfx.draw(), revealMs * 0.25);
     const t3 = setTimeout(() => setRevealing(null), revealMs);
     return () => {
       [t1, t2, t3].forEach(clearTimeout);
@@ -299,7 +299,9 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
               return (
                 <div key={c.id} className="kaw-option">
                   {phone ? (
-                    <CardRow card={c} kawkaw={on} multiplier={m} settled={view.handOutcomes[c.id]} state={on ? 'keep' : 'default'} disabled={known} onClick={() => setKawChoice(on ? null : c.id)} />
+                    <div className="ph-card">
+                      <Card card={c} kawkaw={on} multiplier={m} settled={view.handOutcomes[c.id]} state={on ? 'keep' : 'default'} disabled={known} onClick={() => setKawChoice(on ? null : c.id)} />
+                    </div>
                   ) : (
                     <Card card={c} kawkaw={on} multiplier={m} settled={view.handOutcomes[c.id]} state={on ? 'keep' : 'default'} disabled={known} onClick={() => setKawChoice(on ? null : c.id)} />
                   )}
@@ -455,8 +457,12 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                   multiplier={view.config.kawkawMultiplier}
                   settled={view.handOutcomes[c.id]}
                   onClick={() => {
-                    sfx.pop();
-                    setDetailId(c.id);
+                    // Deciding: a tap selects. Otherwise a tap opens the full card.
+                    if (discarding || finalising) toggle(c.id);
+                    else {
+                      sfx.pop();
+                      setDetailId(c.id);
+                    }
                   }}
                 />
               </div>
@@ -479,27 +485,6 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                 <p className="note center">
                   {view.handOutcomes[detail.id] === 'true' ? 'Kad ini sudah pasti betul.' : 'Kad ini sudah pasti salah.'}
                 </p>
-              )}
-              {(discarding || finalising) && (
-                <button
-                  className={`btn ${selected.includes(detail.id) ? 'btn-ghost' : discarding ? 'btn-red' : 'btn-green'}`}
-                  onClick={() => {
-                    toggle(detail.id);
-                    setDetailId(null);
-                  }}
-                >
-                  {selected.includes(detail.id) ? (
-                    'Batal pilih'
-                  ) : discarding ? (
-                    <>
-                      <Icon name="trash" /> Pilih untuk buang
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="lock" /> Pilih untuk kunci
-                    </>
-                  )}
-                </button>
               )}
               <button className="btn btn-ghost btn-sm" onClick={() => setDetailId(null)}>
                 Tutup

@@ -8,8 +8,8 @@ import type { GuestMessage, HostMessage } from './protocol';
 
 /** Reveal time must match the draw animation in the UI. */
 export const TIMING = {
-  normal: { reveal: 1500, think: [900, 2600] as const },
-  fast: { reveal: 750, think: [300, 900] as const },
+  normal: { reveal: 2300, think: [900, 2600] as const },
+  fast: { reveal: 1100, think: [300, 900] as const },
 };
 
 const BOT_LINES = {

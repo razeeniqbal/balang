@@ -1028,16 +1028,17 @@ button:disabled {
 }
 
 @keyframes reveal {
-  0% {
+  0%,
+  18% {
     opacity: 0;
-    transform: translateY(80px) scale(0.3);
+    transform: translateY(90px) scale(0.2);
   }
-  22% {
+  34% {
     opacity: 1;
-    transform: translateY(-10px) scale(1.08);
+    transform: translateY(-14px) scale(1.12);
   }
-  32%,
-  78% {
+  42%,
+  82% {
     opacity: 1;
     transform: none;
   }

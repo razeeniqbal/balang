@@ -4,7 +4,7 @@ import type { MatchClient } from '../../engine/client';
 import { cardTitle } from '../../engine/predictions';
 import { ranking, statsFor } from '../../engine/stats';
 import type { GameView, ScoreEvent } from '../../engine/types';
-import { Card, CardRow } from '../components/Card';
+import { Card } from '../components/Card';
 import { PHONE, useMedia } from '../useMedia';
 import { Avatar, Confetti, Logo, fmt, signed } from '../components/common';
 import { Icon } from '../components/Icon';
@@ -43,9 +43,11 @@ export function RoundResults({ view, match }: { view: GameView; match: MatchClie
         <h1 className="banner-title">KEPUTUSAN PUSINGAN {view.round}</h1>
 
         {phone ? (
-          <div className="res-rows">
+          <div className="ph-card-pair">
             {mine.map((e) => (
-              <CardRow key={e.card.id} card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+              <div key={e.card.id} className="ph-card">
+                <Card card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+              </div>
             ))}
           </div>
         ) : (

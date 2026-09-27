@@ -1,7 +1,7 @@
 import { food, foodImage } from '../../engine/foods';
 import type { MatchClient } from '../../engine/client';
 import type { GameView } from '../../engine/types';
-import { Card, CardRow } from '../components/Card';
+import { Card } from '../components/Card';
 import { PHONE, useMedia } from '../useMedia';
 import { sfx } from '../sfx';
 
@@ -30,9 +30,11 @@ export function RoundReveal({ view, match }: { view: GameView; match: MatchClien
             KAD RAMALAN RAHSIA ANDA · {view.hand.length}
           </h2>
           {phone ? (
-            <div className="reveal-rows">
+            <div className="ph-card-grid">
               {view.hand.map((c) => (
-                <CardRow key={c.id} card={c} />
+                <div key={c.id} className="ph-card">
+                  <Card card={c} />
+                </div>
               ))}
             </div>
           ) : (
