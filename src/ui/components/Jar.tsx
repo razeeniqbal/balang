@@ -47,10 +47,9 @@ interface Props {
   shaking: boolean;
   canDraw: boolean;
   onDraw: () => void;
-  showHint?: boolean;
 }
 
-export function Jar({ roundKey, foods, startCounts, remaining, shaking, canDraw, onDraw, showHint }: Props) {
+export function Jar({ roundKey, foods, startCounts, remaining, shaking, canDraw, onDraw }: Props) {
   const [pile, setPile] = useState<VisualToken[]>(() => buildPile(foods, startCounts));
   const round = useRef(roundKey);
 
@@ -82,11 +81,6 @@ export function Jar({ roundKey, foods, startCounts, remaining, shaking, canDraw,
   return (
     <div className="jar-wrap">
       <div className="jar-mat" aria-hidden />
-      {showHint && canDraw && (
-        <div className="jar-hint" aria-hidden>
-          KACAU DAN AMBIL TOKEN!
-        </div>
-      )}
       <button className={`jar ${shaking ? 'shake' : ''}`} onClick={onDraw} disabled={!canDraw} aria-label={label}>
         <svg viewBox="0 0 300 390" aria-hidden>
           <defs>

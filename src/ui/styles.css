@@ -951,31 +951,6 @@ button:disabled {
   transform: translateY(-14%) rotate(-6deg);
 }
 
-.jar-hint {
-  position: absolute;
-  left: -34%;
-  top: 30%;
-  width: 34%;
-  padding: 10px;
-  text-align: center;
-  font-family: var(--font-display);
-  color: var(--gold-300);
-  font-size: 18px;
-  line-height: 1.05;
-  background: var(--green-800);
-  border: 2px solid var(--gold-500);
-  border-radius: 16px 16px 4px 16px;
-  box-shadow: var(--shadow-sm);
-  transform: rotate(-6deg);
-  animation: nudge 1.6s ease-in-out infinite;
-}
-
-@keyframes nudge {
-  50% {
-    transform: rotate(-6deg) translateY(-4px);
-  }
-}
-
 /* draw controls */
 .draw-row {
   display: flex;
@@ -1973,10 +1948,6 @@ button.card:hover:not(:disabled) {
 
   .jar-wrap {
     width: min(270px, 62vw);
-  }
-
-  .jar-hint {
-    display: none;
   }
 
 

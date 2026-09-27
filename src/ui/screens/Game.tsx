@@ -283,7 +283,6 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
           shaking={shaking}
           canDraw={myTurn && !revealing}
           onDraw={draw}
-          showHint={view.drawIndex === 0}
         />
         {view.phase === 'DRAW_PHASE' && (
           <div className="kacau-wrap">
