@@ -193,7 +193,9 @@ Final values must be controlled through balancing configuration.
 
 The intended decision funnel is:
 
-**6 → 5 → 3 → 2 final prediction cards**
+**6 → 4 → 3 → 2 final prediction cards**
+
+(Changed from 6 → 5 → 3 → 2 on 2026-09-27: the biggest cut now comes first, when players know the least.)
 
 At defined draw milestones, players must discard prediction cards they believe are becoming less likely.
 

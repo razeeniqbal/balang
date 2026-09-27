@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { CLASSIC } from '../../engine/config';
 import { chipImage, food, foodImage } from '../../engine/foods';
 import type { PredictionCard } from '../../engine/types';
 import { Card } from './Card';
@@ -17,6 +18,17 @@ const EX_CARDS: PredictionCard[] = [
   { id: 't2', kind: 'TEPAT', a: 'muruku', n: 3, reward: 450, penalty: 150 },
   { id: 't3', kind: 'LAST_SEKALI', a: 'curry-puff', reward: 1000, penalty: 300 },
 ];
+
+/** Discard steps derived from the real config: start, then each decision point. */
+const FUNNEL = (() => {
+  let prev = CLASSIC.cardsDealt;
+  const steps = [{ n: prev, at: 'Mula', note: `dapat ${prev} kad` }];
+  for (const m of CLASSIC.milestones) {
+    steps.push({ n: m.keep, at: `Cabutan ${m.afterDraw}`, note: m.lock ? `kunci ${m.keep}` : `buang ${prev - m.keep}` });
+    prev = m.keep;
+  }
+  return steps;
+})();
 
 const EX_DRAWS = ['kuih-lapis', 'onde-onde', 'muruku', 'onde-onde', 'dodol', 'kuih-lapis'];
 
@@ -120,18 +132,19 @@ const SLIDES = [
         <>
           <p>Makin banyak maklumat, makin sedikit kad yang boleh disimpan.</p>
           <p>
-            Selepas cabutan <b>3</b> buang 1, selepas cabutan <b>6</b> buang 2, dan selepas cabutan <b>10</b> pilih <b>2 kad terakhir</b> untuk dikunci.
+            {FUNNEL.slice(1).map((s, i, all) => (
+              <span key={s.at}>
+                {i === 0 ? 'Selepas ' : i === all.length - 1 ? 'dan selepas ' : 'selepas '}
+                {s.at.toLowerCase()} <b>{s.note}</b>
+                {i === all.length - 1 ? ' kad terakhir.' : ', '}
+              </span>
+            ))}
           </p>
         </>
       }
     >
       <div className="tut-funnel">
-        {[
-          { n: 6, at: 'Mula', note: 'dapat 6 kad' },
-          { n: 5, at: 'Cabutan 3', note: 'buang 1' },
-          { n: 3, at: 'Cabutan 6', note: 'buang 2' },
-          { n: 2, at: 'Cabutan 10', note: 'kunci 2' },
-        ].map((s, i) => (
+        {FUNNEL.map((s, i) => (
           <div key={s.at} className="tut-step">
             <div className="tut-stack" aria-hidden>
               {Array.from({ length: s.n }, (_, k) => (
@@ -141,7 +154,7 @@ const SLIDES = [
             <b>{s.n} kad</b>
             <span>{s.at}</span>
             <small>{s.note}</small>
-            {i < 3 && <Icon name="next" className="tut-arrow" />}
+            {i < FUNNEL.length - 1 && <Icon name="next" className="tut-arrow" />}
           </div>
         ))}
       </div>

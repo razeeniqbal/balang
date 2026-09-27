@@ -22,7 +22,7 @@ export const CLASSIC: GameConfig = {
   draws: 15,
   cardsDealt: 6,
   milestones: [
-    { afterDraw: 3, keep: 5 },
+    { afterDraw: 3, keep: 4 },
     { afterDraw: 6, keep: 3 },
     { afterDraw: 10, keep: 2, lock: true },
   ],
