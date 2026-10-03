@@ -44,7 +44,7 @@ const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: 'bot', title: 'Lawan komputer', text: 'Tak cukup orang? Tambah lawan komputer yang berfikir berdasarkan apa yang tinggal dalam balang.' },
   { icon: 'flame', title: 'KAW-KAW', text: 'Gandakan risiko, gandakan ganjaran. Pilihan sahaja, tak wajib untuk menang.' },
   { icon: 'lock', title: 'Adil & rahsia', text: 'Urutan cabutan dan kad setiap pemain disimpan oleh hos. Tiada siapa boleh intai.' },
-  { icon: 'next', title: 'Laju', text: 'Satu perlawanan 3 pusingan siap dalam 10 hingga 15 minit. Had masa setiap giliran boleh dipasang.' },
+  { icon: 'next', title: 'Laju', text: 'Tiga pusingan setiap perlawanan, atau satu pusingan dalam mod Pantas. Had masa setiap giliran boleh dipasang.' },
   { icon: 'share', title: 'Telefon atau komputer', text: 'Terus main dalam pelayar. Tiada aplikasi untuk dipasang.' },
 ];
 
@@ -87,7 +87,7 @@ export function Landing() {
               </Link>
             </div>
             <p className="hero-meta">
-              2 hingga 6 pemain · 10 hingga 15 minit · Percuma, terus dalam pelayar
+              2 hingga 6 pemain · Percuma, terus dalam pelayar
             </p>
           </div>
 

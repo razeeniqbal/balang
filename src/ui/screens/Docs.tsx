@@ -151,7 +151,7 @@ export function Docs() {
                 <tr>
                   <td>Klasik</td>
                   <td>{CLASSIC.rounds}</td>
-                  <td>Perlawanan penuh, lebih kurang 10 hingga 15 minit</td>
+                  <td>Perlawanan penuh</td>
                 </tr>
                 <tr>
                   <td>Pantas</td>

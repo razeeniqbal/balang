@@ -44,7 +44,7 @@ npm run build    # production build → dist/
 ## Balancing
 
 Card rewards are priced from their probability at deal time (`config.ts → rewardTiers`).
-Run the balance report with near-optimal bots:
+Run the balance report (bots play full matches with no UI):
 
 ```bash
 BALANCE=1 npx vitest run balance --silent=false
