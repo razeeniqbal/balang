@@ -1,6 +1,6 @@
 # BALANG — Product Requirements Document
 
-**Version:** 1.1  
+**Version:** 1.2 (rules finalised 2026-10-03)  
 **Status:** Product Direction Locked for Prototype  
 **Product:** BALANG  
 **Tagline:** *Agak. Risiko. Menang.*  
@@ -13,7 +13,7 @@
 
 BALANG is a fast, social Malaysian probability and prediction game built around a shared virtual **balang** filled with familiar Malaysian food tokens.
 
-Players know the starting contents of the balang. As tokens are drawn, they must continuously reassess probability, keep or discard increasingly unlikely predictions, lock their final choices, and optionally activate **KAW-KAW** to increase both risk and reward.
+Players know the starting contents of the balang. As tokens are drawn, they must continuously reassess probability, keep or discard increasingly unlikely predictions, place their final choices (one on the negative side), and optionally activate **KAW-KAW** to increase both risk and reward.
 
 BALANG should feel like a modern Malaysian tabletop game brought into a polished digital party-game experience.
 
@@ -110,8 +110,8 @@ A standard BALANG match contains:
 - **3 rounds**
 - **25 starting tokens per round**
 - **5 active food types per round**
-- **15 draws per round**
-- **10 tokens remaining after all draws**
+- **14 draws per round**, in the rhythm 5, 4, 3, 2 (decisions after draws 5, 9 and 12)
+- **11 tokens remaining after all draws**
 
 Exact balancing values should remain configurable in the game engine rather than hard-coded into UI components.
 
@@ -170,8 +170,7 @@ Each prediction card contains:
 
 - Food token.
 - Prediction condition.
-- Potential reward.
-- Potential penalty.
+- One value (points).
 - Selected/unselected state.
 - Locked state when applicable.
 
@@ -183,7 +182,7 @@ Example visual reward levels established by the concept assets include values su
 - +750
 - +1,000
 
-Penalties increase alongside potential reward.
+Values are priced from the card's probability at deal time: harder predictions are worth more.
 
 Final values must be controlled through balancing configuration.
 
@@ -193,9 +192,18 @@ Final values must be controlled through balancing configuration.
 
 The intended decision funnel is:
 
-**6 → 4 → 3 → 2 final prediction cards**
+**6 → 4 → 3, then all 3 placed: 2 positive and 1 negative**
 
-(Changed from 6 → 5 → 3 → 2 on 2026-09-27: the biggest cut now comes first, when players know the least.)
+| After draw | Action | Cards left |
+|---|---|---|
+| 5 | Discard 2 | 4 |
+| 9 | Discard 1 | 3 |
+| 12 | Place: 1 card on the negative side, 2 positive; optional KAW-KAW | 3 |
+| 14 | Round resolves | |
+
+Change history:
+- 2026-09-27: 6 → 5 → 3 → 2 changed to 6 → 4 → 3 → 2 (the biggest cut comes first, when players know the least).
+- 2026-10-03: rules finalised in the style of the *Bag of Chips* board game: decisions after draws 5, 9 and 12 (14 draws), the final 3 cards all count with one on the negative side, and penalties replaced by the negative card.
 
 At defined draw milestones, players must discard prediction cards they believe are becoming less likely.
 
@@ -225,9 +233,16 @@ Discarding is irreversible after confirmation unless a specific casual-game undo
 
 ---
 
-## 6.3 Lock Action
+## 6.3 Lock Action (placement)
 
-At the appropriate stage, players lock their remaining predictions.
+At the final decision point, players place their 3 remaining predictions: exactly one on the **negative** side and two on the positive side.
+
+Scoring:
+
+| | Positive side | Negative side |
+|---|---|---|
+| Prediction comes true | + value | − value |
+| Prediction does not come true | 0 | 0 |
 
 Malay UI terminology:
 
@@ -245,7 +260,7 @@ After locking:
 
 KAW-KAW is BALANG's signature risk mechanic.
 
-It allows a player to increase the reward associated with a final prediction while also increasing the corresponding loss if the prediction fails.
+It is applied to one positive card at placement. If the prediction comes true, its value is multiplied (×2); if it fails, the player loses its value instead of scoring 0. It cannot be placed on the negative card or on a card whose result is already certain.
 
 Conceptually:
 
@@ -259,10 +274,8 @@ It must never be necessary simply to remain competitive.
 
 The interaction should clearly communicate:
 
-- Current potential reward.
-- Current potential penalty.
-- Modified reward after KAW-KAW.
-- Modified penalty after KAW-KAW.
+- Current value if correct, and 0 if wrong.
+- Value after KAW-KAW if correct, and the loss if wrong.
 - Confirmation state.
 
 No ambiguous gambling-style monetary representation should be used. BALANG scores are game points, not real-world currency.
@@ -334,14 +347,17 @@ Each prediction should clearly show:
 
 - Predicted food.
 - Correct / incorrect result.
+- Side (positive or negative).
 - Base score change.
 - KAW-KAW effect where applicable.
 - Total round score.
 
 Example states:
 
-- **BETUL** — positive result.
-- **SALAH** — negative result.
+- **BETUL** — a positive card came true (scores its value).
+- **SALAH** — a positive card did not come true (scores 0, or loses its value if KAW-KAW).
+- **NEGATIF BERLAKU** — the negative card came true (loses its value).
+- **NEGATIF SELAMAT** — the negative card did not come true (scores 0).
 
 The result must be understandable without requiring the player to reconstruct the previous round mentally.
 
@@ -504,7 +520,7 @@ Cosmetics must not alter probability or provide competitive advantages.
 - Deep green structural UI.
 - Warm cream information surfaces.
 - Yellow/gold primary actions and rewards.
-- Red used for risk, discard, penalties, and the iconic balang lid.
+- Red used for risk, discard, the negative card, and the iconic balang lid.
 - Warm wooden/shared-table environmental context.
 - Botanical accents used selectively.
 
@@ -641,7 +657,7 @@ The following must be rendered by the application:
 - Round numbers.
 - Draw numbers.
 - Prediction values.
-- Penalties.
+- Negative-side losses.
 - Buttons labels where practical.
 - Statistics.
 - Leaderboards.
@@ -860,7 +876,7 @@ Potential balancing analytics:
 - Canonical balang gameplay.
 - 5-food round generation.
 - 25-token starting composition.
-- 15-draw round.
+- 14-draw round (decisions after draws 5, 9 and 12).
 - Prediction cards.
 - Prediction reduction/discard flow.
 - Final lock.

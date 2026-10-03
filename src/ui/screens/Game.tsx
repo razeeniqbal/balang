@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MatchClient } from '../../engine/client';
 import { chipImage, food, foodImage } from '../../engine/foods';
+import { cardTitle } from '../../engine/predictions';
 import type { GameView, PredictionCard, TurnTimer } from '../../engine/types';
 import { TIMING } from '../../net/host';
 import { Card, type CardState } from '../components/Card';
@@ -31,6 +32,28 @@ function useReactionBubbles(view: GameView) {
 }
 
 /** Local countdown from the host's "ms left" snapshot (device clocks are never compared). */
+/** Shrink a row of fixed-size cards evenly so it always fits its container on one line. */
+function useFitRow(count: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const CARD = 160;
+    const GAP = 12;
+    const fit = () => {
+      const avail = el.clientWidth - 8;
+      const needed = count * CARD + (count - 1) * GAP;
+      setZoom(Math.min(1, Math.max(0.5, avail / needed)));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [count]);
+  return { ref, zoom };
+}
+
 function useCountdown(timer: TurnTimer | null) {
   const end = useMemo(() => (timer ? Date.now() + timer.endsIn : 0), [timer]);
   const [now, setNow] = useState(Date.now());
@@ -91,6 +114,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const [settings] = useSettings();
   const revealMs = TIMING[settings.fast ? 'fast' : 'normal'].reveal;
   const bubbles = useReactionBubbles(view);
+  const handRow = useFitRow(view.hand.length);
   const phone = useMedia(PHONE);
 
   // ── draw animation ─────────────────────────────────────────
@@ -138,10 +162,13 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
 
   const myTurn = view.phase === 'DRAW_PHASE' && view.drawerId === view.me;
   const inDecision = view.phase === 'DECISION_PHASE' || view.phase === 'FINAL_PREDICTION';
-  const iMustDecide = !revealing && inDecision && view.status[view.me] === 'thinking';
+  // Taps select as soon as it is your decision; the decision panel waits for the reveal to finish.
+  const deciding = inDecision && view.status[view.me] === 'thinking';
+  const iMustDecide = !revealing && deciding;
   const discarding = iMustDecide && view.phase === 'DECISION_PHASE';
   const finalising = iMustDecide && view.phase === 'FINAL_PREDICTION';
-  const need = discarding ? view.hand.length - (view.milestone?.keep ?? view.hand.length) : finalising ? (view.milestone?.keep ?? 2) : 0;
+  // Discard: pick the cards to drop. Final: pick the one card for the negative side.
+  const need = !deciding ? 0 : view.phase === 'DECISION_PHASE' ? view.hand.length - (view.milestone?.keep ?? view.hand.length) : 1;
   const waitingOn = view.players.filter((p) => view.status[p.id] === 'thinking');
 
   const toggle = (id: string) => {
@@ -157,7 +184,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
   const submitFinal = (kaw: string | null) => {
     if (kaw) sfx.kawkaw();
     else sfx.lock();
-    match.act({ type: 'final', keep: selected, kawkaw: kaw });
+    match.act({ type: 'final', keep: view.hand.map((c) => c.id), negative: selected[0], kawkaw: kaw });
   };
 
   const countdown = useCountdown(view.timer);
@@ -190,8 +217,8 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
 
   const cardState = (c: PredictionCard): CardState => {
     if (view.locked) return 'locked';
-    if (discarding) return selected.includes(c.id) ? 'discard' : 'default';
-    if (finalising) return selected.includes(c.id) ? 'keep' : 'default';
+    if (deciding && view.phase === 'DECISION_PHASE') return selected.includes(c.id) ? 'discard' : 'default';
+    if (deciding) return selected.includes(c.id) ? 'negative' : 'default';
     return 'default';
   };
 
@@ -215,10 +242,10 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
       <>
         {clock}
         <p className="action-lead">
-          Pilih <b>{need}</b> kad terakhir untuk dikunci. Selepas ini anda boleh pilih KAW-KAW.
+          Pilih <b>1 kad negatif</b>: jika ia berlaku, anda hilang nilainya. Dua lagi kad positif, dan anda boleh KAW-KAW salah satu.
         </p>
         <button className="btn btn-green" disabled={selected.length !== need} onClick={() => setKawOpen(true)}>
-          <Icon name="lock" /> KUNCI {selected.length}/{need} KAD
+          <Icon name="lock" /> KUNCI PILIHAN
         </button>
       </>
     );
@@ -233,12 +260,18 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     );
   } else if (view.locked) {
     const kc = view.hand.find((c) => c.id === view.kawkawCardId);
+    const nc = view.hand.find((c) => c.id === view.negativeCardId);
     action = (
       <p className="action-lead">
         <Icon name="lock" size={18} /> Pilihan dikunci.{' '}
+        {nc && (
+          <>
+            Negatif: <b>{cardTitle(nc)}</b>.{' '}
+          </>
+        )}
         {kc ? (
           <>
-            KAW-KAW pada <b>{food(kc.a).name}</b>.
+            KAW-KAW pada <b>{cardTitle(kc)}</b>.
           </>
         ) : (
           'Main selamat.'
@@ -254,7 +287,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
           cabutan lagi sebelum anda perlu{' '}
           {nm.lock ? (
             <>
-              <b>kunci {nm.keep} kad</b> &amp; pilih KAW-KAW
+              <b>pilih 1 kad negatif</b> &amp; KAW-KAW
             </>
           ) : (
             <b>buang {view.hand.length - nm.keep} kad</b>
@@ -265,7 +298,8 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     );
   }
 
-  const keptCards = view.hand.filter((c) => selected.includes(c.id));
+  const keptCards = view.hand.filter((c) => !selected.includes(c.id));
+  const negCard = view.hand.find((c) => selected.includes(c.id));
 
   const overlays = (
     <>
@@ -308,20 +342,23 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                   {known ? (
                     <div className="kaw-preview off">Dah pasti, tak boleh KAW-KAW</div>
                   ) : (
-                    <div className="kaw-preview" aria-label={`Jika KAW-KAW: ganjaran ${c.reward * m}, penalti ${c.penalty * m}`}>
+                    <div className="kaw-preview" aria-label={`Jika KAW-KAW: ${c.reward * m} jika betul, hilang ${c.reward} jika salah`}>
                       <div className="up">
-                        +{fmt(c.reward)} → +{fmt(c.reward * m)}
+                        Betul: +{fmt(c.reward)} → +{fmt(c.reward * m)}
                       </div>
-                      <div className="down">
-                        −{fmt(c.penalty)} → −{fmt(c.penalty * m)}
-                      </div>
+                      <div className="down">Salah: 0 → −{fmt(c.reward)}</div>
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-          <p className="note center">{kawChoice ? 'Ganjaran dan penalti kad bernyala akan digandakan.' : 'Tekan satu kad untuk KAW-KAW, atau main selamat.'}</p>
+          {negCard && (
+            <p className="note center">
+              Kad negatif anda: <b>{cardTitle(negCard)}</b> (hilang {fmt(negCard.reward)} jika berlaku).
+            </p>
+          )}
+          <p className="note center">{kawChoice ? 'Kad bernyala: ganda jika betul, hilang nilainya jika salah.' : 'Tekan satu kad positif untuk KAW-KAW, atau main selamat.'}</p>
           <div className="kaw-actions">
             <button className="btn btn-green" onClick={() => submitFinal(null)}>
               <Icon name="shield" /> MAIN SELAMAT
@@ -355,9 +392,9 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
     const left = Object.values(view.remaining).reduce((a, b) => a + b, 0);
     let listHint: string;
     if (discarding) listHint = `Pilih ${need} untuk dibuang · ${selected.length}/${need}`;
-    else if (finalising) listHint = `Pilih ${need} untuk dikunci · ${selected.length}/${need}`;
+    else if (finalising) listHint = `Pilih 1 kad negatif · ${selected.length}/1`;
     else if (view.locked) listHint = 'Dikunci';
-    else if (nm) listHint = `${Math.max(toMilestone, 0)} cabutan lagi · ${nm.lock ? `kunci ${nm.keep}` : `buang ${view.hand.length - nm.keep}`}`;
+    else if (nm) listHint = `${Math.max(toMilestone, 0)} cabutan lagi · ${nm.lock ? 'pilih negatif' : `buang ${view.hand.length - nm.keep}`}`;
     else listHint = '';
 
     // One button, with the turn timer drawn along its bottom edge.
@@ -375,7 +412,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
       const t = timed(decideClock);
       controls = (
         <button className={`btn btn-green ph-btn ${decideClock ? 'has-timer' : ''}`} style={t.style} disabled={selected.length !== need} onClick={() => setKawOpen(true)}>
-          <Icon name="lock" /> KUNCI {selected.length}/{need} {t.secs}
+          <Icon name="lock" /> KUNCI {t.secs}
         </button>
       );
     } else if (view.phase === 'DRAW_PHASE') {
@@ -454,11 +491,12 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                   card={c}
                   state={cardState(c)}
                   kawkaw={view.kawkawCardId === c.id}
+                  negative={view.negativeCardId === c.id}
                   multiplier={view.config.kawkawMultiplier}
                   settled={view.handOutcomes[c.id]}
                   onClick={() => {
                     // Deciding: a tap selects. Otherwise a tap opens the full card.
-                    if (discarding || finalising) toggle(c.id);
+                    if (deciding) toggle(c.id);
                     else {
                       sfx.pop();
                       setDetailId(c.id);
@@ -478,6 +516,7 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
                 card={detail}
                 state={cardState(detail)}
                 kawkaw={view.kawkawCardId === detail.id}
+                negative={view.negativeCardId === detail.id}
                 multiplier={view.config.kawkawMultiplier}
                 settled={view.handOutcomes[detail.id]}
               />
@@ -562,16 +601,17 @@ export function Game({ view, match, onSettings }: { view: GameView; match: Match
             <h2 className="panel-title">KAD RAMALAN ANDA</h2>
             <span className="pill">{view.hand.length} kad</span>
           </div>
-          <div className="cards">
+          <div className="cards fit-row" ref={handRow.ref} style={{ ['--hand-zoom' as string]: handRow.zoom }}>
             {view.hand.map((c) => (
               <Card
                 key={c.id}
                 card={c}
                 state={cardState(c)}
                 kawkaw={view.kawkawCardId === c.id}
+                negative={view.negativeCardId === c.id}
                 multiplier={view.config.kawkawMultiplier}
                 settled={view.handOutcomes[c.id]}
-                onClick={discarding || finalising ? () => toggle(c.id) : undefined}
+                onClick={deciding ? () => toggle(c.id) : undefined}
               />
             ))}
           </div>

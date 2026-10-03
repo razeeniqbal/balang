@@ -1,16 +1,16 @@
 import type { GameConfig } from './types';
 
 const rewardTiers: GameConfig['rewardTiers'] = [
-  { minP: 0.8, reward: 100, penalty: 50 },
-  { minP: 0.65, reward: 200, penalty: 50 },
-  { minP: 0.55, reward: 250, penalty: 100 },
-  { minP: 0.45, reward: 350, penalty: 100 },
-  { minP: 0.38, reward: 400, penalty: 100 },
-  { minP: 0.31, reward: 450, penalty: 150 },
-  { minP: 0.24, reward: 500, penalty: 150 },
-  { minP: 0.18, reward: 600, penalty: 200 },
-  { minP: 0.12, reward: 750, penalty: 250 },
-  { minP: 0, reward: 1000, penalty: 300 },
+  { minP: 0.8, reward: 100 },
+  { minP: 0.65, reward: 200 },
+  { minP: 0.55, reward: 250 },
+  { minP: 0.45, reward: 350 },
+  { minP: 0.38, reward: 400 },
+  { minP: 0.31, reward: 450 },
+  { minP: 0.24, reward: 500 },
+  { minP: 0.18, reward: 600 },
+  { minP: 0.12, reward: 750 },
+  { minP: 0, reward: 1000 },
 ];
 
 export const CLASSIC: GameConfig = {
@@ -19,12 +19,13 @@ export const CLASSIC: GameConfig = {
   tokensPerRound: 25,
   minPerFood: 2,
   maxPerFood: 9,
-  draws: 15,
+  // Bag of Chips rhythm: decisions after 5, 9 and 12 draws, then the last 2.
+  draws: 14,
   cardsDealt: 6,
   milestones: [
-    { afterDraw: 3, keep: 4 },
-    { afterDraw: 6, keep: 3 },
-    { afterDraw: 10, keep: 2, lock: true },
+    { afterDraw: 5, keep: 4 },
+    { afterDraw: 9, keep: 3 },
+    { afterDraw: 12, keep: 3, lock: true },
   ],
   kawkawMultiplier: 2,
   rewardTiers,

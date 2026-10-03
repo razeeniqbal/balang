@@ -30,8 +30,8 @@ function playMatch(seed: number, players = 4) {
     } else if (host.phase === 'FINAL_PREDICTION') {
       for (const p of host.players) {
         const v = host.view(p.id);
-        const { keep, kawkaw } = botFinal(rng, v, persona);
-        expect(host.submitFinal(p.id, keep, kawkaw)).toBe(true);
+        const { keep, negative, kawkaw } = botFinal(rng, v, persona);
+        expect(host.submitFinal(p.id, keep, negative, kawkaw)).toBe(true);
       }
     } else if (host.phase === 'ROUND_RESOLUTION') {
       const v = host.view('p0');
@@ -57,8 +57,15 @@ describe('GameHost', () => {
       for (const p of host.players) {
         const sum = v.events.filter((e) => e.playerId === p.id).reduce((s, e) => s + e.delta, 0);
         expect(v.scores[p.id]).toBe(sum);
-        expect(v.events.filter((e) => e.playerId === p.id)).toHaveLength(6); // 2 finals × 3 rounds
-        expect(statsFor(v.events, p.id).total).toBe(6);
+        const mine = v.events.filter((e) => e.playerId === p.id);
+        expect(mine).toHaveLength(9); // 3 placed cards × 3 rounds
+        for (const e of mine) {
+          // Positive: +value if true, else 0. Negative: -value if true, else 0. KAW-KAW: x2 if true, -value if not.
+          const expected = e.side === 'negative' ? (e.correct ? -e.card.reward : 0) : e.kawkaw ? (e.correct ? 2 * e.card.reward : -e.card.reward) : e.correct ? e.card.reward : 0;
+          expect(e.delta).toBe(expected);
+        }
+        expect(mine.filter((e) => e.side === 'negative')).toHaveLength(3); // one per round
+        expect(statsFor(v.events, p.id).total).toBe(9);
       }
     }
   });

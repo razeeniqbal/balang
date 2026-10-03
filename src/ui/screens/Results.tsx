@@ -3,7 +3,7 @@ import { chipImage, food } from '../../engine/foods';
 import type { MatchClient } from '../../engine/client';
 import { cardTitle } from '../../engine/predictions';
 import { ranking, statsFor } from '../../engine/stats';
-import type { GameView, ScoreEvent } from '../../engine/types';
+import { isGood, type GameView, type ScoreEvent } from '../../engine/types';
 import { Card } from '../components/Card';
 import { PHONE, useMedia } from '../useMedia';
 import { Avatar, Confetti, Logo, fmt, signed } from '../components/common';
@@ -13,9 +13,9 @@ import { sfx } from '../sfx';
 
 function Mini({ e }: { e: ScoreEvent }) {
   return (
-    <span className={`mini ${e.correct ? 'ok' : 'bad'}`} title={cardTitle(e.card)}>
+    <span className={`mini ${isGood(e) ? 'ok' : e.delta < 0 ? 'bad' : ''}`} title={cardTitle(e.card)}>
       <img src={chipImage(e.card.a)} alt="" />
-      {e.correct ? '✓ BETUL' : '✗ SALAH'}
+      {e.side === 'negative' ? (e.correct ? '✗ NEGATIF BERLAKU' : '✓ NEGATIF SELAMAT') : e.correct ? '✓ BETUL' : '✗ SALAH'}
       {e.kawkaw && <Icon name="flame" size={13} />}
       <span className="sr-only">
         {cardTitle(e.card)} {food(e.card.a).name}
@@ -46,14 +46,14 @@ export function RoundResults({ view, match }: { view: GameView; match: MatchClie
           <div className="ph-card-pair">
             {mine.map((e) => (
               <div key={e.card.id} className="ph-card">
-                <Card card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+                <Card card={e.card} state={isGood(e) ? 'correct' : 'wrong'} negative={e.side === 'negative'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
               </div>
             ))}
           </div>
         ) : (
           <div className="res-mine">
             {mine.map((e) => (
-              <Card key={e.card.id} card={e.card} state={e.correct ? 'correct' : 'wrong'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
+              <Card key={e.card.id} card={e.card} state={isGood(e) ? 'correct' : 'wrong'} negative={e.side === 'negative'} kawkaw={e.kawkaw} multiplier={view.config.kawkawMultiplier} />
             ))}
           </div>
         )}
@@ -63,7 +63,7 @@ export function RoundResults({ view, match }: { view: GameView; match: MatchClie
 
         <div>
           <h2 className="panel-title" style={{ textAlign: 'center', marginBottom: 8 }}>
-            15 TOKEN YANG KELUAR
+            {view.config.draws} TOKEN YANG KELUAR
           </h2>
           <div className="seq">
             {view.drawn.map((f, i) => (
@@ -228,7 +228,7 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
                     </div>
                   </td>
                   <td style={{ fontSize: 13, fontWeight: 700 }}>
-                    {s.correct}/{s.total} betul · KAW-KAW {s.kawkawWon}/{s.kawkawTried}
+                    {s.correct}/{s.total} baik · KAW-KAW {s.kawkawWon}/{s.kawkawTried}
                   </td>
                   <td>{fmt(view.scores[p.id])}</td>
                 </tr>
@@ -243,16 +243,16 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
           </h2>
           <div className="stats-grid">
             <div className="stat">
-              <span>Ketepatan</span>
+              <span>Keputusan baik</span>
               <b>{Math.round(stats.accuracy * 100)}%</b>
               <small>
-                {stats.correct} daripada {stats.total} ramalan
+                {stats.correct} daripada {stats.total} kad berakhir baik
               </small>
             </div>
             <div className="stat">
               <span>Ramalan terbaik</span>
               <b>{stats.best ? signed(stats.best.delta) : 'Tiada'}</b>
-              <small>{stats.best ? `${cardTitle(stats.best.card)} · ${food(stats.best.card.a).name}` : 'Tiada yang betul'}</small>
+              <small>{stats.best ? `${cardTitle(stats.best.card)} · ${food(stats.best.card.a).name}` : 'Tiada mata diperoleh'}</small>
             </div>
             <div className="stat">
               <span>Terlepas paling teruk</span>
@@ -269,7 +269,7 @@ export function FinalResults({ view, match, onExit }: { view: GameView; match: M
             <div className="stat">
               <span>Rentetan terpanjang</span>
               <b>{stats.longestStreak}</b>
-              <small>betul berturut-turut</small>
+              <small>keputusan baik berturut-turut</small>
             </div>
           </div>
         </div>

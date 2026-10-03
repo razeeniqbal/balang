@@ -8,9 +8,9 @@ import { Icon, type IconName } from '../components/Icon';
 import { Link } from '../router';
 
 const HERO_CARDS: PredictionCard[] = [
-  { id: 'h1', kind: 'SIAPA_DULU', a: 'onde-onde', b: 'kuih-lapis', reward: 350, penalty: 100 },
-  { id: 'h2', kind: 'LAST_SEKALI', a: 'curry-puff', reward: 1000, penalty: 300 },
-  { id: 'h3', kind: 'DOUBLE', a: 'kuih-bahulu', reward: 500, penalty: 150 },
+  { id: 'h1', kind: 'SIAPA_DULU', a: 'onde-onde', b: 'kuih-lapis', reward: 350 },
+  { id: 'h2', kind: 'LAST_SEKALI', a: 'curry-puff', reward: 1000 },
+  { id: 'h3', kind: 'DOUBLE', a: 'kuih-bahulu', reward: 500 },
 ];
 
 /** A fixed, well-mixed jar for the hero (same every visit). */
@@ -26,7 +26,7 @@ const STEPS: { icon: IconName; title: string; text: ReactNode }[] = [
       </>
     ),
   },
-  { icon: 'users', title: 'Agak dengan 6 kad', text: 'Setiap pemain dapat kad ramalan rahsia. Makin susah berlaku, makin besar ganjarannya.' },
+  { icon: 'users', title: 'Agak dengan 6 kad', text: 'Setiap pemain dapat kad ramalan rahsia. Makin susah berlaku, makin besar nilainya.' },
   {
     icon: 'trash',
     title: 'Kacau & buang',
@@ -36,7 +36,7 @@ const STEPS: { icon: IconName; title: string; text: ReactNode }[] = [
       </>
     ),
   },
-  { icon: 'flame', title: 'Kunci & KAW-KAW', text: 'Kunci 2 kad terakhir. Berani? KAW-KAW satu kad untuk gandakan ganjaran dan penalti.' },
+  { icon: 'flame', title: 'Negatif & KAW-KAW', text: 'Letak 3 kad terakhir, satu di sisi negatif. Berani? KAW-KAW satu kad positif untuk gandakan nilainya.' },
 ];
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [

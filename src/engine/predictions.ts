@@ -243,5 +243,5 @@ export const specKey = (s: CardSpec) => `${s.kind}:${s.a}:${s.b ?? ''}:${s.n ?? 
 
 export function priceFor(p: number, cfg: GameConfig) {
   const tier = cfg.rewardTiers.find((t) => p >= t.minP) ?? cfg.rewardTiers[cfg.rewardTiers.length - 1];
-  return { reward: tier.reward, penalty: tier.penalty };
+  return { reward: tier.reward };
 }

@@ -27,8 +27,8 @@ export interface PredictionCard {
   a: FoodId;
   b?: FoodId;
   n?: number;
+  /** Points the card is worth: gained on the positive side, lost on the negative side. */
   reward: number;
-  penalty: number;
 }
 
 /** Whether a card's condition is already settled by what has been drawn. */
@@ -39,7 +39,7 @@ export interface Milestone {
   afterDraw: number;
   /** Hand size after the decision. */
   keep: number;
-  /** Final decision: locks the hand and opens KAW-KAW. */
+  /** Final decision: place the hand (one card negative) and choose KAW-KAW. */
   lock?: boolean;
 }
 
@@ -54,7 +54,7 @@ export interface GameConfig {
   milestones: Milestone[];
   kawkawMultiplier: number;
   /** Reward tiers ordered from most likely (cheap) to least likely (expensive). */
-  rewardTiers: { minP: number; reward: number; penalty: number }[];
+  rewardTiers: { minP: number; reward: number }[];
   /** Cards outside this probability band at deal time are never dealt. */
   dealableP: [number, number];
   /** Seconds per draw turn and per decision; 0 turns the timer off. */
@@ -92,10 +92,16 @@ export interface ScoreEvent {
   round: number;
   playerId: string;
   card: PredictionCard;
+  /** The card's condition came true. */
   correct: boolean;
+  /** Negative-side cards cost points when they come true. */
+  side: 'positive' | 'negative';
   kawkaw: boolean;
   delta: number;
 }
+
+/** A result that helped the player: a positive card came true, or a negative card did not. */
+export const isGood = (e: Pick<ScoreEvent, 'correct' | 'side'>) => (e.side === 'positive' ? e.correct : !e.correct);
 
 export interface Reaction {
   id: number;
@@ -128,6 +134,7 @@ export interface GameView {
   handOutcomes: Record<string, CardOutcome>;
   locked: boolean;
   kawkawCardId: string | null;
+  negativeCardId: string | null;
   /** Hand sizes of every player (contents stay private until resolution). */
   handSizes: Record<string, number>;
   lastRoundEvents: ScoreEvent[];

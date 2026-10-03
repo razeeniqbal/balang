@@ -1,4 +1,4 @@
-import type { ScoreEvent } from './types';
+import { isGood, type ScoreEvent } from './types';
 
 export interface PlayerStats {
   total: number;
@@ -17,16 +17,17 @@ export function statsFor(events: ScoreEvent[], playerId: string): PlayerStats {
   let streak = 0;
   let longestStreak = 0;
   for (const e of mine) {
-    streak = e.correct ? streak + 1 : 0;
+    streak = isGood(e) ? streak + 1 : 0;
     longestStreak = Math.max(longestStreak, streak);
   }
-  const wins = mine.filter((e) => e.correct);
-  const losses = mine.filter((e) => !e.correct);
+  const wins = mine.filter((e) => e.delta > 0);
+  const losses = mine.filter((e) => e.delta < 0);
+  const good = mine.filter(isGood);
   const kaw = mine.filter((e) => e.kawkaw);
   return {
     total: mine.length,
-    correct: wins.length,
-    accuracy: mine.length ? wins.length / mine.length : 0,
+    correct: good.length,
+    accuracy: mine.length ? good.length / mine.length : 0,
     best: wins.reduce<ScoreEvent | null>((b, e) => (!b || e.delta > b.delta ? e : b), null),
     worst: losses.reduce<ScoreEvent | null>((b, e) => (!b || e.delta < b.delta ? e : b), null),
     kawkawTried: kaw.length,

@@ -14,9 +14,9 @@ const EX_COUNTS: [string, number][] = [
 ];
 
 const EX_CARDS: PredictionCard[] = [
-  { id: 't1', kind: 'BANYAK_LAGI', a: 'onde-onde', b: 'dodol', reward: 100, penalty: 50 },
-  { id: 't2', kind: 'TEPAT', a: 'muruku', n: 3, reward: 450, penalty: 150 },
-  { id: 't3', kind: 'LAST_SEKALI', a: 'curry-puff', reward: 1000, penalty: 300 },
+  { id: 't1', kind: 'BANYAK_LAGI', a: 'onde-onde', b: 'dodol', reward: 100 },
+  { id: 't2', kind: 'TEPAT', a: 'muruku', n: 3, reward: 450 },
+  { id: 't3', kind: 'LAST_SEKALI', a: 'curry-puff', reward: 1000 },
 ];
 
 /** Discard steps derived from the real config: start, then each decision point. */
@@ -24,7 +24,7 @@ const FUNNEL = (() => {
   let prev = CLASSIC.cardsDealt;
   const steps = [{ n: prev, at: 'Mula', note: `dapat ${prev} kad` }];
   for (const m of CLASSIC.milestones) {
-    steps.push({ n: m.keep, at: `Cabutan ${m.afterDraw}`, note: m.lock ? `kunci ${m.keep}` : `buang ${prev - m.keep}` });
+    steps.push({ n: m.keep, at: `Cabutan ${m.afterDraw}`, note: m.lock ? `letak ${m.keep}` : `buang ${prev - m.keep}` });
     prev = m.keep;
   }
   return steps;
@@ -74,8 +74,8 @@ const SLIDES = [
       title="Agak apa akan berlaku"
       text={
         <>
-          <p>Anda dapat <b>6 kad ramalan rahsia</b>. Setiap kad ada <b className="up">ganjaran</b> jika betul dan <b className="down">penalti</b> jika salah.</p>
-          <p>Makin susah ramalan itu berlaku, makin besar ganjarannya.</p>
+          <p>Anda dapat <b>{CLASSIC.cardsDealt} kad ramalan rahsia</b>. Setiap kad ada satu <b>nilai</b>: jika ramalan itu berlaku, anda dapat nilainya.</p>
+          <p>Makin susah ramalan itu berlaku, makin besar nilainya.</p>
         </>
       }
     >
@@ -97,14 +97,14 @@ const SLIDES = [
       title="Kacau & cabut, satu demi satu"
       text={
         <>
-          <p>Pemain bergilir menekan <b>KACAU</b>. <b>15 token</b> akan keluar dan 10 kekal dalam balang.</p>
+          <p>Pemain bergilir menekan <b>KACAU</b>. <b>{CLASSIC.draws} token</b> akan keluar dan {CLASSIC.tokensPerRound - CLASSIC.draws} kekal dalam balang.</p>
           <p>Panel <b>Balang Sekarang</b> menunjukkan apa yang masih tinggal. Gunakan itu untuk menilai kad anda.</p>
           <p>Jika hos pasang <b>had masa</b> dan masa anda tamat, token dicabut atau kad dipilih secara automatik.</p>
         </>
       }
     >
       <div className="tut-draws">
-        {Array.from({ length: 15 }, (_, i) => (
+        {Array.from({ length: CLASSIC.draws }, (_, i) => (
           <span key={i} className={i < EX_DRAWS.length ? 'on' : ''}>
             {i < EX_DRAWS.length ? <img src={chipImage(EX_DRAWS[i])} alt={food(EX_DRAWS[i]).name} /> : i + 1}
           </span>
@@ -172,20 +172,21 @@ const SLIDES = [
   () => (
     <Slide
       kicker="Langkah 5"
-      title="KAW-KAW atau main selamat?"
+      title="Satu kad negatif, KAW-KAW atau main selamat?"
       text={
         <>
-          <p>Semasa mengunci, anda boleh <b>KAW-KAW</b> satu kad: ganjaran <i>dan</i> penalti jadi <b>dua kali ganda</b>.</p>
-          <p>Pilihan sahaja. Kad yang sudah pasti tak boleh di-KAW-KAW.</p>
+          <p>
+            Di titik terakhir, letak <b>1 kad di sisi negatif</b>: jika ramalan itu berlaku, anda <b className="down">hilang</b> nilainya. Dua kad lagi kekal positif.
+          </p>
+          <p>
+            Berani? <b>KAW-KAW</b> satu kad positif: nilainya jadi <b>dua kali ganda</b> jika betul, tetapi anda hilang nilainya jika salah. Kad yang sudah pasti tak boleh di-KAW-KAW.
+          </p>
         </>
       }
     >
       <div className="tut-kaw">
-        <Card card={{ ...EX_CARDS[1], id: 'k' }} kawkaw multiplier={2} state="keep" />
-        <div className="kaw-preview">
-          <div className="up">+450 → +900</div>
-          <div className="down">−150 → −300</div>
-        </div>
+        <Card card={{ ...EX_CARDS[2], id: 'n' }} negative state="negative" />
+        <Card card={{ ...EX_CARDS[1], id: 'k' }} kawkaw multiplier={CLASSIC.kawkawMultiplier} state="keep" />
       </div>
     </Slide>
   ),
@@ -195,8 +196,10 @@ const SLIDES = [
       title="Keputusan & JUARA"
       text={
         <>
-          <p>Selepas cabutan ke-15, kad anda diperiksa: <b className="up">BETUL</b> dapat ganjaran, <b className="down">SALAH</b> kena penalti.</p>
-          <p>Main <b>3 pusingan</b>. Mata tertinggi jadi JUARA!</p>
+          <p>
+            Selepas cabutan ke-{CLASSIC.draws}: kad positif yang <b className="up">BETUL</b> dapat nilainya, yang salah dapat 0. Kad negatif yang <b className="down">berlaku</b> tolak nilainya, yang tak berlaku dapat 0.
+          </p>
+          <p>Main <b>{CLASSIC.rounds} pusingan</b>. Mata tertinggi jadi JUARA!</p>
         </>
       }
     >
@@ -204,11 +207,14 @@ const SLIDES = [
         <div className="mini ok">
           <img src={chipImage('muruku')} alt="" /> ✓ BETUL <b>+450</b>
         </div>
-        <div className="mini bad">
-          <img src={chipImage('curry-puff')} alt="" /> ✗ SALAH <b>−300</b>
+        <div className="mini">
+          <img src={chipImage('onde-onde')} alt="" /> ✗ SALAH <b>0</b>
+        </div>
+        <div className="mini ok">
+          <img src={chipImage('curry-puff')} alt="" /> ✓ NEGATIF SELAMAT <b>0</b>
         </div>
         <div className="tut-total">
-          Pusingan ini: <b className="up">+150</b>
+          Pusingan ini: <b className="up">+450</b>
         </div>
         <div className="tut-crown">
           <Icon name="crown" size={44} />

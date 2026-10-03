@@ -2,11 +2,12 @@ import { it } from 'vitest';
 import { botDiscard, botFinal, randomPersonality } from './bots';
 import { GameHost } from './game';
 import { mulberry32 } from './rng';
+import { isGood } from './types';
 
 // Balance report, not an assertion suite: BALANCE=1 npx vitest run balance --silent=false
 it.skipIf(!import.meta.env.BALANCE)('balance report', () => {
   const rng = mulberry32(42);
-  let finals = 0, correct = 0, settledAtLock = 0, kaw = 0, kawWon = 0, roundScore = 0, rounds = 0;
+  let neg = 0, negHit = 0, good = 0, finals = 0, correct = 0, settledAtLock = 0, kaw = 0, kawWon = 0, roundScore = 0, rounds = 0;
   const tierHits: Record<number, [number, number]> = {};
   for (let m = 0; m < 60; m++) {
     const host = new GameHost(1000 + m);
@@ -22,11 +23,12 @@ it.skipIf(!import.meta.env.BALANCE)('balance report', () => {
           const v = host.view(p.id);
           const d = botFinal(rng, v, bots[i]);
           settledAtLock += d.keep.filter((id) => v.handOutcomes[id] !== 'open').length;
-          host.submitFinal(p.id, d.keep, d.kawkaw);
+          host.submitFinal(p.id, d.keep, d.negative, d.kawkaw);
         });
       } else if (host.phase === 'ROUND_RESOLUTION') {
         for (const e of host.view('p0').lastRoundEvents) {
-          finals++; correct += +e.correct; roundScore += e.delta;
+          finals++; correct += +e.correct; good += +isGood(e); roundScore += e.delta;
+          if (e.side === 'negative') { neg++; negHit += +e.correct; }
           if (e.kawkaw) { kaw++; kawWon += +e.correct; }
           const t = (tierHits[e.card.reward] ??= [0, 0]); t[0]++; t[1] += +e.correct;
         }
@@ -36,7 +38,9 @@ it.skipIf(!import.meta.env.BALANCE)('balance report', () => {
     }
   }
   console.log({
-    accuracy: (correct / finals).toFixed(2),
+    cameTrue: (correct / finals).toFixed(2),
+    goodResults: (good / finals).toFixed(2),
+    negativeCardHit: (negHit / neg).toFixed(2),
     settledAtLock: (settledAtLock / finals).toFixed(2),
     kawkawRate: (kaw / (rounds * 4)).toFixed(2),
     kawkawWin: (kawWon / kaw).toFixed(2),

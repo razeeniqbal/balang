@@ -4,13 +4,15 @@ import type { CardOutcome, PredictionCard } from '../../engine/types';
 import { fmt } from './common';
 import { Icon, type IconName } from './Icon';
 
-export type CardState = 'default' | 'keep' | 'discard' | 'locked' | 'correct' | 'wrong';
+export type CardState = 'default' | 'keep' | 'discard' | 'negative' | 'locked' | 'correct' | 'wrong';
 
 interface Props {
   card: PredictionCard;
   state?: CardState;
   kawkaw?: boolean;
   multiplier?: number;
+  /** Placed on the negative side: loses its value if it comes true. */
+  negative?: boolean;
   settled?: CardOutcome;
   onClick?: () => void;
   disabled?: boolean;
@@ -77,29 +79,38 @@ function Art({ card }: { card: PredictionCard }) {
 const FLAG: Partial<Record<CardState, { icon: IconName; label: string }>> = {
   keep: { icon: 'check', label: 'Dipilih' },
   discard: { icon: 'trash', label: 'Akan dibuang' },
+  negative: { icon: 'minus', label: 'Kad negatif' },
   locked: { icon: 'lock', label: 'Dikunci' },
   correct: { icon: 'check', label: 'Betul' },
   wrong: { icon: 'x', label: 'Salah' },
 };
 
-export function Card({ card, state = 'default', kawkaw, multiplier = 1, settled = 'open', onClick, disabled, dim }: Props) {
+/** What a card is worth where it sits: positive, KAW-KAW or negative. */
+function valueOf(card: PredictionCard, kawkaw: boolean | undefined, multiplier: number, negative: boolean) {
+  if (negative) return { main: `−${fmt(card.reward)}`, sub: 'NEGATIF', aria: `Kad negatif: hilang ${fmt(card.reward)} jika berlaku.` };
+  if (kawkaw) return { main: `+${fmt(card.reward * multiplier)}`, sub: `−${fmt(card.reward)} jika salah`, aria: `KAW-KAW: ${fmt(card.reward * multiplier)} jika betul, hilang ${fmt(card.reward)} jika salah.` };
+  return { main: `+${fmt(card.reward)}`, sub: '', aria: `Bernilai ${fmt(card.reward)}.` };
+}
+
+export function Card({ card, state = 'default', kawkaw, multiplier = 1, negative, settled = 'open', onClick, disabled, dim }: Props) {
   const title = cardTitle(card);
   const text = cardText(card);
-  const reward = card.reward * (kawkaw ? multiplier : 1);
-  const penalty = card.penalty * (kawkaw ? multiplier : 1);
+  const isNeg = !!negative || state === 'negative';
+  const val = valueOf(card, kawkaw, multiplier, isNeg);
   const flag = FLAG[state];
   const cls = [
     'card',
     `tone-${CARD_TONE[card.kind]}`,
     state !== 'default' && `is-${state}`,
     kawkaw && 'is-kawkaw',
+    isNeg && 'is-negative',
     dim && 'dim',
   ]
     .filter(Boolean)
     .join(' ');
 
   const settledLabel = settled === 'true' ? 'Dah pasti betul' : settled === 'false' ? 'Dah pasti salah' : '';
-  const aria = `${title}. ${text} Ganjaran ${fmt(reward)}, penalti ${fmt(penalty)}.${kawkaw ? ' KAW-KAW aktif.' : ''}${flag ? ` ${flag.label}.` : ''}${settledLabel ? ` ${settledLabel}.` : ''}`;
+  const aria = `${title}. ${text} ${val.aria}${flag ? ` ${flag.label}.` : ''}${settledLabel ? ` ${settledLabel}.` : ''}`;
 
   const body = (
     <>
@@ -120,8 +131,8 @@ export function Card({ card, state = 'default', kawkaw, multiplier = 1, settled 
       </div>
       <div className="card-text">{text}</div>
       <div className="card-value">
-        <div className="card-reward">+{fmt(reward)}</div>
-        <div className="card-penalty">−{fmt(penalty)}</div>
+        <div className="card-reward">{val.main}</div>
+        {val.sub && <div className="card-penalty">{val.sub}</div>}
       </div>
       <span className="sr-only">{food(card.a).name}</span>
     </>
@@ -129,7 +140,7 @@ export function Card({ card, state = 'default', kawkaw, multiplier = 1, settled 
 
   if (onClick) {
     return (
-      <button className={cls} onClick={onClick} disabled={disabled} aria-pressed={state === 'keep' || state === 'discard'} aria-label={aria}>
+      <button className={cls} onClick={onClick} disabled={disabled} aria-pressed={state === 'keep' || state === 'discard' || state === 'negative'} aria-label={aria}>
         {body}
       </button>
     );
@@ -142,17 +153,16 @@ export function Card({ card, state = 'default', kawkaw, multiplier = 1, settled 
 }
 
 /** Wide list-style card for phones: art, condition and value on one row. */
-export function CardRow({ card, state = 'default', kawkaw, multiplier = 1, settled = 'open', onClick, disabled }: Props) {
+export function CardRow({ card, state = 'default', kawkaw, multiplier = 1, negative, settled = 'open', onClick, disabled }: Props) {
   const title = cardTitle(card);
   const text = cardText(card);
-  const reward = card.reward * (kawkaw ? multiplier : 1);
-  const penalty = card.penalty * (kawkaw ? multiplier : 1);
+  const val = valueOf(card, kawkaw, multiplier, !!negative || state === 'negative');
   const flag = FLAG[state];
   const cls = ['card-row', `tone-${CARD_TONE[card.kind]}`, state !== 'default' && `is-${state}`, kawkaw && 'is-kawkaw', settled !== 'open' && `settled-${settled}`]
     .filter(Boolean)
     .join(' ');
   const settledLabel = settled === 'true' ? 'Dah pasti betul' : settled === 'false' ? 'Dah pasti salah' : '';
-  const aria = `${title}. ${text} Ganjaran ${fmt(reward)}, penalti ${fmt(penalty)}.${kawkaw ? ' KAW-KAW aktif.' : ''}${flag ? ` ${flag.label}.` : ''}${settledLabel ? ` ${settledLabel}.` : ''}`;
+  const aria = `${title}. ${text} ${val.aria}${flag ? ` ${flag.label}.` : ''}${settledLabel ? ` ${settledLabel}.` : ''}`;
   const body = (
     <>
       <span className="cr-art" aria-hidden>
@@ -169,8 +179,8 @@ export function CardRow({ card, state = 'default', kawkaw, multiplier = 1, settl
         <span className="cr-text">{text}</span>
       </span>
       <span className="cr-value">
-        <b>+{fmt(reward)}</b>
-        <small>−{fmt(penalty)}</small>
+        <b>{val.main}</b>
+        {val.sub && <small>{val.sub}</small>}
       </span>
       {flag && (
         <span className="cr-flag" aria-hidden>

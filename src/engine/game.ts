@@ -45,6 +45,7 @@ export class GameHost {
   private pending = new Set<string>();
   private locked: Record<string, boolean> = {};
   private kawkaw: Record<string, string | null> = {};
+  private negative: Record<string, string | null> = {};
   private events: ScoreEvent[] = [];
   private reactions: Reaction[] = [];
   private reactionSeq = 0;
@@ -132,6 +133,7 @@ export class GameHost {
     this.pending.clear();
     this.locked = {};
     this.kawkaw = {};
+    this.negative = {};
     this.deal();
     this.phase = 'ROUND_REVEAL';
     this.track('round_started', { round: this.round, counts: this.startCounts });
@@ -228,19 +230,22 @@ export class GameHost {
     return true;
   }
 
-  submitFinal(byId: string, keepIds: string[], kawkawId: string | null) {
+  /** Place the final hand: one card on the negative side, optional KAW-KAW on a positive card. */
+  submitFinal(byId: string, keepIds: string[], negativeId: string, kawkawId: string | null) {
     const m = this.config.milestones[this.milestoneIdx];
     const hand = this.hands[byId];
     if (this.phase !== 'FINAL_PREDICTION' || !this.pending.has(byId) || !m || !hand) return false;
     const keep = new Set(keepIds);
     if (keep.size !== m.keep || ![...keep].every((id) => hand.some((c) => c.id === id))) return false;
-    if (kawkawId && !keep.has(kawkawId)) return false;
+    if (!keep.has(negativeId)) return false;
+    if (kawkawId && (!keep.has(kawkawId) || kawkawId === negativeId)) return false;
     // KAW-KAW is a risk: it can't be put on a card whose result is already known.
     const kawCard = hand.find((c) => c.id === kawkawId);
     if (kawCard && outcome(kawCard, this.sequence.slice(0, this.drawIndex), this.remaining(), this.config.draws) !== 'open') return false;
     this.hands[byId] = hand.filter((c) => keep.has(c.id));
     this.locked[byId] = true;
     this.kawkaw[byId] = kawkawId;
+    this.negative[byId] = negativeId;
     this.pending.delete(byId);
     this.track('prediction_locked', { playerId: byId, cards: [...keep] });
     if (kawkawId) this.track('kawkaw_activated', { playerId: byId, card: kawkawId });
@@ -261,11 +266,16 @@ export class GameHost {
     for (const p of this.players) {
       for (const card of this.hands[p.id] ?? []) {
         const correct = evaluateWithStart(card, seq, this.startCounts);
+        const side = this.negative[p.id] === card.id ? 'negative' : 'positive';
         const kaw = this.kawkaw[p.id] === card.id;
-        const mult = kaw ? this.config.kawkawMultiplier : 1;
-        const delta = correct ? card.reward * mult : -card.penalty * mult;
+        // Positive: scores if true, else 0. Negative: loses if true, else 0.
+        // KAW-KAW (positive only): multiplied if true, loses its value if not.
+        let delta: number;
+        if (side === 'negative') delta = correct ? -card.reward : 0;
+        else if (kaw) delta = correct ? card.reward * this.config.kawkawMultiplier : -card.reward;
+        else delta = correct ? card.reward : 0;
         this.scores[p.id] += delta;
-        this.events.push({ round: this.round, playerId: p.id, card, correct, kawkaw: kaw, delta });
+        this.events.push({ round: this.round, playerId: p.id, card, correct, side, kawkaw: kaw, delta });
         this.track('prediction_resolved', { playerId: p.id, card: card.id, correct, kawkaw: kaw, delta });
       }
     }
@@ -353,6 +363,7 @@ export class GameHost {
       handOutcomes,
       locked: this.locked[me] ?? false,
       kawkawCardId: this.kawkaw[me] ?? null,
+      negativeCardId: this.negative[me] ?? null,
       handSizes: Object.fromEntries(this.players.map((p) => [p.id, this.hands[p.id]?.length ?? 0])),
       lastRoundEvents: this.events.filter((e) => e.round === this.round && this.phase !== 'LOBBY'),
       events: this.phase === 'ROUND_RESOLUTION' || this.phase === 'FINAL_RESULTS' ? [...this.events] : this.events.filter((e) => e.round < this.round),

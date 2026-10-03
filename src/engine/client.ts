@@ -7,7 +7,7 @@ export type Action =
   | { type: 'beginDraws' }
   | { type: 'draw' }
   | { type: 'discard'; ids: string[] }
-  | { type: 'final'; keep: string[]; kawkaw: string | null }
+  | { type: 'final'; keep: string[]; negative: string; kawkaw: string | null }
   | { type: 'react'; text: string }
   | { type: 'next' }
   | { type: 'again' }
@@ -44,7 +44,7 @@ export function applyAction(host: GameHost, pid: string, a: Action) {
     case 'discard':
       return host.discard(pid, a.ids);
     case 'final':
-      return host.submitFinal(pid, a.keep, a.kawkaw);
+      return host.submitFinal(pid, a.keep, a.negative, a.kawkaw);
     case 'react':
       return host.react(pid, String(a.text).slice(0, 20));
     case 'next':

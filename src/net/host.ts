@@ -303,8 +303,8 @@ export class HostMatch implements MatchClient {
       h.react(p.id, 'Masa tamat!');
       if (pv.phase === 'DECISION_PHASE') h.discard(p.id, botDiscard(this.rng, pv, TIMEOUT_PLAYER));
       else {
-        const { keep } = botFinal(this.rng, pv, TIMEOUT_PLAYER);
-        h.submitFinal(p.id, keep, null);
+        const { keep, negative } = botFinal(this.rng, pv, TIMEOUT_PLAYER);
+        h.submitFinal(p.id, keep, negative, null);
       }
     }
   }
@@ -357,8 +357,8 @@ export class HostMatch implements MatchClient {
           if (view.phase === 'DECISION_PHASE') {
             h.discard(id, botDiscard(this.rng, view, me));
           } else {
-            const { keep, kawkaw } = botFinal(this.rng, view, me);
-            h.submitFinal(id, keep, kawkaw);
+            const { keep, negative, kawkaw } = botFinal(this.rng, view, me);
+            h.submitFinal(id, keep, negative, kawkaw);
           }
         });
       }

@@ -100,7 +100,7 @@ export async function renderShareCard(d: ShareData): Promise<Blob> {
   // stats
   const s = d.stats;
   const tiles: [string, string][] = [
-    ['KETEPATAN', `${Math.round(s.accuracy * 100)}%`],
+    ['BAIK', `${Math.round(s.accuracy * 100)}%`],
     ['TERBAIK', s.best ? signed(s.best.delta) : '-'],
     ['KAW-KAW', `${s.kawkawWon}/${s.kawkawTried}`],
     ['RENTETAN', String(s.longestStreak)],

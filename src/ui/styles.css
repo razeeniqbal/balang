@@ -3798,3 +3798,78 @@ p,
 .results > :last-child {
   margin-bottom: auto;
 }
+
+/* negative-side card: loses its value if it comes true */
+.card.is-negative {
+  border-color: var(--red-500);
+  box-shadow: 0 0 0 3px rgba(216, 49, 43, 0.4), var(--shadow-sm);
+}
+
+.card.is-negative .card-reward {
+  background: var(--red-700);
+}
+
+.card.is-negative .card-penalty {
+  background: var(--green-900);
+  letter-spacing: 0.06em;
+}
+
+.card.is-negative .card-flag {
+  background: var(--red-500);
+  color: #fff;
+}
+
+.card.is-negative.is-correct .card-flag {
+  background: var(--ok);
+}
+
+.card-row.is-negative {
+  border-color: var(--red-500);
+}
+
+.card-row.is-negative .cr-value b {
+  color: var(--red-700);
+}
+
+/* desktop hand: always one row; the row is shrunk evenly (see useFitRow) instead of wrapping */
+.cards.fit-row {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.cards.fit-row > .card {
+  zoom: var(--hand-zoom, 1);
+  flex: none;
+  width: 160px;
+}
+
+/* short desktop windows: compact jar count so it never covers the action panel */
+@media (min-width: 901px) and (max-height: 820px) {
+  .comp {
+    padding: 8px 10px;
+  }
+
+  .comp-head {
+    margin-bottom: 6px;
+  }
+
+  .comp-row {
+    grid-template-columns: 34px 1fr auto;
+    padding: 2px 4px;
+  }
+
+  .comp-row img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .comp-row .out {
+    margin-top: 1px;
+    font-size: 10px;
+  }
+
+  .comp-row .count {
+    font-size: 20px;
+  }
+}
